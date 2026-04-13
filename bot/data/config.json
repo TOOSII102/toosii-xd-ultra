@@ -597,6 +597,24 @@
           "timestamp": 1776074842179,
           "action": "add",
           "addedBy": "unknown"
+        },
+        {
+          "jid": "120826657542188@lid",
+          "name": "120826657542188",
+          "number": "120826657542188",
+          "addedAt": "2026-04-13T10:15:16.646Z",
+          "timestamp": 1776075316646,
+          "action": "add",
+          "addedBy": "unknown"
+        },
+        {
+          "jid": "191440147726527@lid",
+          "name": "191440147726527",
+          "number": "191440147726527",
+          "addedAt": "2026-04-13T10:16:21.325Z",
+          "timestamp": 1776075381325,
+          "action": "add",
+          "addedBy": "unknown"
         }
       ],
       "120363421940295077@g.us": [
@@ -721,7 +739,7 @@
         }
       ]
     },
-    "updatedAt": "2026-04-13T10:07:22.179Z",
+    "updatedAt": "2026-04-13T10:16:21.325Z",
     "totalGroups": 6
   },
   "owner_data": {
