@@ -5107,14 +5107,16 @@ async function startBot(loginMode = 'auto', loginData = null) {
                         const modeDisplay = modeMap[BOT_MODE.toLowerCase()] || BOT_MODE.toUpperCase();
 
                         // ── RAM sampled last — freshest reading just before build ──
-                        const targetJid   = (ownerInfo && ownerInfo.ownerJid) ? ownerInfo.ownerJid : sock.user.id;
-                        const _pingStart  = Date.now();
-                        const _liveRss    = process.memoryUsage().rss;
-                        const usedMB      = (_liveRss / 1024 / 1024).toFixed(1);
-                        const totalGB     = (_os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
-                        const ramPct      = Math.min(100, Math.round((_liveRss / _os.totalmem()) * 100));
-                        const filled      = Math.round(ramPct / 10);
-                        const ramBar      = '█'.repeat(filled) + '░'.repeat(10 - filled);
+                        const targetJid     = (ownerInfo && ownerInfo.ownerJid) ? ownerInfo.ownerJid : sock.user.id;
+                        const _pingStart    = Date.now();
+                        const _totalMem     = _os.totalmem();
+                        const _usedSysMem   = _totalMem - _os.freemem();           // real OS RAM in use
+                        const _liveRss      = process.memoryUsage().rss;           // bot process footprint
+                        const usedMB        = (_liveRss / 1024 / 1024).toFixed(1);
+                        const totalGB       = (_totalMem / 1024 / 1024 / 1024).toFixed(2);
+                        const ramPct        = Math.min(100, Math.round((_usedSysMem / _totalMem) * 100));
+                        const filled        = Math.round(ramPct / 10);
+                        const ramBar        = '█'.repeat(filled) + '░'.repeat(10 - filled);
 
                         const successMessage = `╔═|〔  ${getCurrentBotName()} 〕\n║\n║ ▸ *Name*     : ${getCurrentBotName()}\n║ ▸ *Prefix*   : ${getCurrentPrefix() || 'none'}\n║ ▸ *Owner*    : +${displayOwnerNumber}\n║ ▸ *Mode*     : ${modeDisplay}\n║ ▸ *Platform* : ${detectPlatform()}\n║ ▸ *Version*  : v${VERSION}\n║ ▸ *Uptime*   : ${uptimeStr}\n║ ▸ *Commands* : ${commands.size}\n║ ▸ *Usage*    : ${usedMB} MB of ${totalGB} GB\n║ ▸ *RAM*      : [${ramBar}] ${ramPct}%\n║ ▸ *Speed*    : ~${Date.now() - _pingStart}ms\n║ ▸ *Status*   : CONNECTED ✅\n║\n╚═|〔 SYSTEM ONLINE  〕`;
 
