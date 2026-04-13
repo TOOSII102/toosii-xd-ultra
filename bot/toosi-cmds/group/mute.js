@@ -21,22 +21,31 @@ module.exports = {
         }
 
         // — permission check (sender) —
-        let isPrivileged = ctx?.isOwnerUser || ctx?.isSudoUser;
+        let isPrivileged   = ctx?.isOwnerUser || ctx?.isSudoUser;
+        let _dbgAdmins     = [];
+        let _dbgRawJid     = '';
         if (!isPrivileged) {
             try {
-                const meta     = await sock.groupMetadata(chatId);
+                const meta    = await sock.groupMetadata(chatId);
                 const rawJid   = msg.key.participant || msg.key.remoteJid || '';
+                _dbgRawJid     = rawJid;
                 const bareJid  = rawJid.replace(/:[\d]+@/, '@');
                 const numPart  = rawJid.split('@')[0].split(':')[0];
+                const rawDomain = rawJid.split('@')[1] || '';
+                _dbgAdmins     = meta.participants.filter(p => p.admin === 'admin' || p.admin === 'superadmin').map(p => p.id);
                 isPrivileged   = meta.participants.some(p => {
                     if (p.admin !== 'admin' && p.admin !== 'superadmin') return false;
-                    const pId   = p.id || '';
-                    const pBare = pId.replace(/:[\d]+@/, '@');
-                    const pNum  = pId.split('@')[0].split(':')[0];
-                    return pId === rawJid || pBare === bareJid || pNum === numPart;
+                    const pId     = p.id || '';
+                    const pDomain = pId.split('@')[1] || '';
+                    const pBare   = pId.replace(/:[\d]+@/, '@');
+                    const pNum    = pId.split('@')[0].split(':')[0];
+                    return pId === rawJid || pBare === bareJid ||
+                        (pNum === numPart && numPart.length >= 5 && pDomain === rawDomain);
                 });
             } catch {}
         }
+
+        console.log(`[MUTE-PERM] sender=${_dbgRawJid || msg.key.participant} isOwner=${ctx?.isOwnerUser} isSudo=${ctx?.isSudoUser} byAdmin=${isPrivileged} admins=[${_dbgAdmins.join(',')}]`);
 
         if (!isPrivileged) {
             return sock.sendMessage(chatId, {

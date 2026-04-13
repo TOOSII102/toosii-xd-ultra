@@ -25,15 +25,18 @@ module.exports = {
         if (!isPrivileged) {
             try {
                 const meta     = await sock.groupMetadata(chatId);
-                const rawJid   = msg.key.participant || msg.key.remoteJid || '';
-                const bareJid  = rawJid.replace(/:[\d]+@/, '@');
-                const numPart  = rawJid.split('@')[0].split(':')[0];
-                isPrivileged   = meta.participants.some(p => {
+                const rawJid    = msg.key.participant || msg.key.remoteJid || '';
+                const bareJid   = rawJid.replace(/:[\d]+@/, '@');
+                const numPart   = rawJid.split('@')[0].split(':')[0];
+                const rawDomain = rawJid.split('@')[1] || '';
+                isPrivileged    = meta.participants.some(p => {
                     if (p.admin !== 'admin' && p.admin !== 'superadmin') return false;
-                    const pId   = p.id || '';
-                    const pBare = pId.replace(/:[\d]+@/, '@');
-                    const pNum  = pId.split('@')[0].split(':')[0];
-                    return pId === rawJid || pBare === bareJid || pNum === numPart;
+                    const pId     = p.id || '';
+                    const pDomain = pId.split('@')[1] || '';
+                    const pBare   = pId.replace(/:[\d]+@/, '@');
+                    const pNum    = pId.split('@')[0].split(':')[0];
+                    return pId === rawJid || pBare === bareJid ||
+                        (pNum === numPart && numPart.length >= 5 && pDomain === rawDomain);
                 });
             } catch {}
         }
