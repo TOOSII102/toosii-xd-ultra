@@ -216,10 +216,61 @@ const aiMuslimCmd = {
     }
 };
 
+// ── 6. ADVENTIST HYMNAL ───────────────────────────────────────────────────────
+const hymnCmd = {
+    name: 'hymn',
+    aliases: ['hymnal', 'adventhymn', 'sda'],
+    description: 'Look up an Adventist hymnal by number (1–695)',
+    category: 'spiritual',
+    async execute(sock, msg, args, prefix) {
+        const chatId = msg.key.remoteJid;
+        const name   = getBotName();
+        try { await sock.sendMessage(chatId, { react: { text: '🎼', key: msg.key } }); } catch {}
+
+        const num = parseInt(args[0]);
+        if (!num || num < 1 || num > 695) {
+            return sock.sendMessage(chatId, {
+                text: `╔═|〔  ADVENTIST HYMNAL 〕\n║\n║ ▸ *Usage*   : ${prefix}hymn <number>\n║ ▸ *Example* : ${prefix}hymn 1\n║ ▸ *Range*   : 1 – 695\n║\n╚═|〔 ${name} 〕`
+            }, { quoted: msg });
+        }
+
+        try {
+            const data   = await kFetch(`/adventist/hymnal?q=${num}`);
+            const r      = data?.result;
+            if (!r?.title) throw new Error('Hymn not found');
+
+            const verses = (r.verses || []).slice(0, 4);
+            let out = `╔═|〔  ADVENTIST HYMNAL 〕\n║\n║ ▸ *#${r.number}* — ${r.title}\n║`;
+            for (const v of verses) {
+                out += `\n║ ── *Verse ${v.number}*\n`;
+                for (const line of (v.lines || [])) {
+                    out += `║   ${line}\n`;
+                }
+                out += `║`;
+            }
+            if (r.chorus?.lines?.length) {
+                out += `\n║ ── *Chorus*\n`;
+                for (const line of r.chorus.lines) {
+                    out += `║   ${line}\n`;
+                }
+                out += `║`;
+            }
+            out += `\n╚═|〔 ${name} 〕`;
+
+            await sock.sendMessage(chatId, { text: out }, { quoted: msg });
+        } catch (e) {
+            await sock.sendMessage(chatId, {
+                text: `╔═|〔  ADVENTIST HYMNAL 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+            }, { quoted: msg });
+        }
+    }
+};
+
 module.exports = [
     bibleCmd,
     randBibleCmd,
     aiBibleCmd,
     surahListCmd,
     aiMuslimCmd,
+    hymnCmd,
 ];

@@ -193,8 +193,8 @@ const apkCmd = {
 };
 
 const soundcloudCmd = {
-    name: 'soundcloud',
-    aliases: ['sc2', 'scloud', 'scmusic'],
+    name: 'scsearch',
+    aliases: ['scfind', 'sc2', 'scmusic'],
     description: 'Search SoundCloud for tracks and artists',
     category: 'search',
     async execute(sock, msg, args, prefix, ctx) {

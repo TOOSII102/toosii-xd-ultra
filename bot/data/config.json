@@ -721,7 +721,7 @@
     "OWNER_CLEAN_JID": "254706441840@s.whatsapp.net",
     "OWNER_CLEAN_NUMBER": "254706441840",
     "ownerLID": null,
-    "linkedAt": "2026-04-13T09:44:55.961Z",
+    "linkedAt": "2026-04-13T09:51:11.733Z",
     "autoLinked": false,
     "previousOwnerCleared": true,
     "version": "1.1.5"
@@ -752,9 +752,9 @@
     "ownerJid": "254706441840@s.whatsapp.net",
     "updatedAt": "2026-04-11T14:31:50.389Z"
   },
-  "MODE": "silent",
+  "MODE": "public",
   "bot_mode": {
-    "mode": "silent"
+    "mode": "public"
   },
   "antiviewonce_history": {
     "messages": [],
