@@ -50,22 +50,22 @@ const mboxCmd = {
     }
 };
 
-// ── Movie by IMDB ID (OMDb — free) ────────────────────────────────────────────
+// ── Movie Detail by title or IMDB ID (OMDb — free) ────────────────────────────
 const trailerCmd = {
     name: 'trailer',
-    aliases: ['movietrailer', 'gettrailer', 'movtrailer', 'imdbid'],
-    description: 'Get detailed movie info by IMDB ID — .trailer tt<id>',
+    aliases: ['movietrailer', 'gettrailer', 'movtrailer', 'imdbid', 'filminfo'],
+    description: 'Get detailed movie info — .trailer <title or tt-ID>',
     category: 'movie',
     async execute(sock, msg, args, prefix) {
         const chatId = msg.key.remoteJid;
         const name   = getBotName();
-        const id     = args[0]?.trim();
-        if (!id) return sock.sendMessage(chatId, {
-            text: `╔═|〔  🎬 MOVIE DETAIL 〕\n║\n║ ▸ *Usage*   : ${prefix}trailer <imdb-id>\n║ ▸ *Example* : ${prefix}trailer tt4154796\n║ ▸ *Tip*     : ${prefix}mbox <title> to find IMDb IDs\n║\n╚═|〔 ${name} 〕`
+        const input  = args.join(' ').trim();
+        if (!input) return sock.sendMessage(chatId, {
+            text: `╔═|〔  🎬 MOVIE DETAIL 〕\n║\n║ ▸ *Usage*   : ${prefix}trailer <movie title>\n║ ▸ *Example* : ${prefix}trailer dark knight\n║ ▸ *By ID*   : ${prefix}trailer tt4154796\n║ ▸ *Tip*     : ${prefix}mbox <title> to browse results\n║\n╚═|〔 ${name} 〕`
         }, { quoted: msg });
         try {
             await sock.sendMessage(chatId, { react: { text: '🎬', key: msg.key } });
-            const query = id.startsWith('tt') ? { i: id } : { t: id };
+            const query = /^tt\d+$/i.test(input) ? { i: input } : { t: input };
             const data  = await omdbFetch(query);
             if (data.Response === 'False') throw new Error(data.Error || 'Movie not found');
 
