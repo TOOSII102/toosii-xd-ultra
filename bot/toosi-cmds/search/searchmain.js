@@ -76,42 +76,4 @@ const lyricsCmd = {
     }
 };
 
-// ── Movie Search (OMDb — free trial key) ──────────────────────────────────────
-const movieCmd = {
-    name: 'movie',
-    aliases: ['film', 'moviesearch', 'imdb'],
-    description: 'Search for any movie or TV show',
-    category: 'search',
-    async execute(sock, msg, args, prefix) {
-        const chatId = msg.key.remoteJid;
-        const name   = getBotName();
-        const query  = args.join(' ').trim();
-        if (!query) return sock.sendMessage(chatId, {
-            text: `╔═|〔  🎬 MOVIE SEARCH 〕\n║\n║ ▸ *Usage* : ${prefix}movie <title>\n║ ▸ *Example* : ${prefix}movie avengers\n║\n╚═|〔 ${name} 〕`
-        }, { quoted: msg });
-        try {
-            await sock.sendMessage(chatId, { react: { text: '🎬', key: msg.key } });
-            const data = await apiFetch(`https://www.omdbapi.com/?t=${encodeURIComponent(query)}&apikey=trilogy`);
-            if (data.Response === 'False') throw new Error(data.Error || 'Movie not found');
-
-            const banner =
-                `╔═|〔  🎬 MOVIE 〕\n║\n` +
-                `║ ▸ *Title*    : ${data.Title} (${data.Year})\n` +
-                `║ ▸ *Genre*    : ${data.Genre}\n` +
-                `║ ▸ *Director* : ${data.Director}\n` +
-                `║ ▸ *Actors*   : ${data.Actors}\n` +
-                `║ ▸ *Runtime*  : ${data.Runtime}\n` +
-                `║ ▸ *Rated*    : ${data.Rated}\n` +
-                `║ ▸ *IMDB*     : ⭐ ${data.imdbRating}/10\n` +
-                `║\n║ 📝 *Plot* : ${data.Plot}\n║\n` +
-                `╚═|〔 ${name} 〕`;
-            await sock.sendMessage(chatId, { text: banner }, { quoted: msg });
-        } catch (e) {
-            await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎬 MOVIE SEARCH 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
-            }, { quoted: msg });
-        }
-    }
-};
-
-module.exports = [bibleCmd, lyricsCmd, movieCmd];
+module.exports = [bibleCmd, lyricsCmd];
