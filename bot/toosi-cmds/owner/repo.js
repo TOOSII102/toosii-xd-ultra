@@ -110,58 +110,70 @@ module.exports = {
             const local = isOwnRepo ? localGitInfo() : null;
 
             // ── Build output ───────────────────────────────────────────────
-            let lines = [`╔═|〔  🐙 REPO INFO 〕`, `║`];
+            let lines = [];
 
-            if (ghOk && r) {
-                // GitHub returned a real repo
+            if (isOwnRepo) {
+                // ── Own bot repo — professional CTA card ──────────────────
+                const stars    = ghOk ? num(r.stargazers_count) : '—';
+                const forks    = ghOk ? num(r.forks_count)      : '—';
+                const watchers = ghOk ? num(r.subscribers_count) : '—';
+                const version  = global.VERSION || '1.1.5';
+                lines = [
+                    `╔═|〔  🤖 TOOSII-XD ULTRA 〕`,
+                    `║`,
+                    `║  The most feature-packed WhatsApp bot`,
+                    `║  230+ commands · 18+ categories`,
+                    `║`,
+                    `║ 📊 *Repo Stats*`,
+                    `║ ▸ ⭐ Stars    : ${stars}`,
+                    `║ ▸ 🍴 Forks    : ${forks}`,
+                    `║ ▸ 👁️  Watchers : ${watchers}`,
+                    `║ ▸ 🔖 Version  : v${version}`,
+                    `║`,
+                    `║ ⚡ *Categories*`,
+                    `║ ▸ 🤖 AI · 📥 Downloads · 🎮 Games`,
+                    `║ ▸ 📚 Education · 🕊️ Spiritual · 🔞 Adult`,
+                    `║ ▸ ⚙️ Automation · 📢 Channel Tools`,
+                    `║ ▸ 🔍 Stalker · 🖼️ Image · 🎬 Movies`,
+                    `║`,
+                    `║ 🔗 *GitHub*`,
+                    `║  https://github.com/${OWN_REPO}`,
+                    `║`,
+                    `║ ⭐ *Enjoyed the bot? Star the repo!*`,
+                    `║ 🍴 *Fork & deploy your own instance*`,
+                    `║ 📲 *Share with friends — it's free!*`,
+                    `║`,
+                    foot,
+                ];
+            } else if (ghOk && r) {
+                // ── External repo — clean stats view ──────────────────────
                 const topics = Array.isArray(r.topics) && r.topics.length ? r.topics.slice(0, 5).join(', ') : 'N/A';
-                lines.push(
-                    `║ ▸ *Repo*       : ${r.full_name}`,
-                    `║ ▸ *Description*: ${trunc(r.description, 80)}`,
-                    `║ ▸ *Language*   : ${r.language || 'N/A'}`,
-                    `║ ▸ *Topics*     : ${topics}`,
-                    `║ ▸ *Visibility* : ${r.visibility || 'N/A'}`,
-                    `║ ▸ *License*    : ${r.license?.name || 'N/A'}`,
+                lines = [
+                    `╔═|〔  🐙 REPO INFO 〕`,
+                    `║`,
+                    `║ ▸ *Repo*    : ${r.full_name}`,
+                    `║ ▸ *About*   : ${trunc(r.description, 75)}`,
+                    `║ ▸ *Language*: ${r.language || 'N/A'}`,
+                    `║ ▸ *License* : ${r.license?.name || 'N/A'}`,
+                    `║ ▸ *Topics*  : ${topics}`,
                     `║`,
                     `║ 📊 *Stats*`,
-                    `║ ▸ ⭐ Stars     : ${num(r.stargazers_count)}`,
-                    `║ ▸ 🍴 Forks     : ${num(r.forks_count)}`,
-                    `║ ▸ 👁️  Watchers  : ${num(r.subscribers_count)}`,
-                    `║ ▸ 🐛 Issues    : ${num(r.open_issues_count)}`,
-                    `║ ▸ 📦 Size      : ${num(r.size)} KB`,
+                    `║ ▸ ⭐ Stars    : ${num(r.stargazers_count)}`,
+                    `║ ▸ 🍴 Forks    : ${num(r.forks_count)}`,
+                    `║ ▸ 👁️  Watchers : ${num(r.subscribers_count)}`,
+                    `║ ▸ 🐛 Issues   : ${num(r.open_issues_count)}`,
                     `║`,
-                    `║ 📅 *Dates*`,
+                    `║ 📅 *Activity*`,
                     `║ ▸ Created : ${fmtDate(r.created_at)}`,
                     `║ ▸ Updated : ${fmtDate(r.updated_at)}`,
-                    `║ ▸ Pushed  : ${fmtDate(r.pushed_at)}`,
-                );
-            } else if (isOwnRepo) {
-                // Own bot repo (private/no access) — use local info
-                lines.push(
-                    `║ ▸ *Repo*    : ${OWN_REPO}`,
-                    `║ ▸ *Branch*  : ${local.branch}`,
-                    `║ ▸ *Version* : v${global.VERSION || '1.1.5'}`,
-                    `║ ▸ *Commits* : ${local.count} total`,
-                    `║ ▸ *HEAD*    : ${local.sha}`,
-                );
+                    `║`,
+                    `║ 🔗 https://github.com/${repoSlug}`,
+                    `║`,
+                    foot,
+                ];
             } else {
                 throw new Error(`Repo "${repoSlug}" not found or is private`);
             }
-
-            // ── Recent commits ─────────────────────────────────────────────
-            const displayCommits = latestCommits.length
-                ? latestCommits
-                : (local ? local.commits.map(c => ({ hash: c.hash, msg: c.msg, by: 'local', date: '' })) : []);
-
-            if (displayCommits.length) {
-                lines.push(`║`, `║ 📝 *Recent Commits*`);
-                displayCommits.forEach(c => {
-                    lines.push(`║ ▸ \`${c.hash}\` ${c.msg}`);
-                    if (c.by && c.by !== 'local') lines.push(`║      👤 ${c.by} · ${c.date}`);
-                });
-            }
-
-            lines.push(`║`, `║ 🔗 https://github.com/${repoSlug}`, `║`, foot);
 
             await sock.sendMessage(chatId, { text: lines.join('\n') }, { quoted: msg });
 
