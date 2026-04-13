@@ -85,15 +85,10 @@ module.exports = {
                          || '';
         const _raw = quotedOwner.split('@')[0].split(':')[0];
         const _resolved = resolveNumber(quotedOwner, sock);
-        console.log('[SAVE-DBG3] FULL ctx2 keys=' + JSON.stringify(Object.keys(ctx2 || {})));
-        console.log('[SAVE-DBG3] participant=' + ctx2?.participant);
-        console.log('[SAVE-DBG3] remoteJid=' + ctx2?.remoteJid);
-        console.log('[SAVE-DBG3] mentionedJid=' + JSON.stringify(ctx2?.mentionedJid));
-        console.log('[SAVE-DBG3] forwardingScore=' + ctx2?.forwardingScore);
-        console.log('[SAVE-DBG3] isForwarded=' + ctx2?.isForwarded);
-        console.log('[SAVE-DBG3] quotedMsg keys=' + JSON.stringify(Object.keys(quotedMsg || {})));
-        console.log('[SAVE-DBG3] msg.remoteJid=' + msg.key.remoteJid);
-        console.log('[SAVE-DBG3] resolved=' + _resolved);
+        console.log('[SAVE-DBG4] statusAttributions=' + JSON.stringify(ctx2?.statusAttributions));
+        console.log('[SAVE-DBG4] imgCtx participant=' + quotedMsg?.imageMessage?.contextInfo?.participant);
+        console.log('[SAVE-DBG4] imgCtx remoteJid=' + quotedMsg?.imageMessage?.contextInfo?.remoteJid);
+        console.log('[SAVE-DBG4] participant=' + ctx2?.participant + ' | resolved=' + _resolved);
 
         if (!quotedMsg) {
             return sock.sendMessage(chatId, {
