@@ -83,6 +83,9 @@ module.exports = {
         const quotedOwner = ctx2?.participant
                          || (ctx2?.remoteJid !== 'status@broadcast' ? ctx2?.remoteJid : '')
                          || '';
+        const _raw = quotedOwner.split('@')[0].split(':')[0];
+        const _resolved = resolveNumber(quotedOwner, sock);
+        console.log('[SAVE-DBG2] participant=' + ctx2?.participant + ' | ctx2.remoteJid=' + ctx2?.remoteJid + ' | msg.remoteJid=' + msg.key.remoteJid + ' | quotedOwner=' + quotedOwner + ' | raw=' + _raw + ' | resolved=' + _resolved);
 
         if (!quotedMsg) {
             return sock.sendMessage(chatId, {
