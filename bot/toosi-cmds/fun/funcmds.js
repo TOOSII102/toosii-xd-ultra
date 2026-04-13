@@ -78,31 +78,6 @@ const nhieCmd = makeTextCmd({
     path: '/fun/never-have-i-ever', title: 'NEVER HAVE I EVER', icon: '🤫',
 });
 
-// ── Insult ──────────────────────────────────────────────────────────────────
-
-const insultCmd = {
-    name: 'insult',
-    aliases: ['roast', 'diss', 'flame'],
-    description: 'Get a random savage insult/roast',
-    category: 'fun',
-    async execute(sock, msg, args, prefix, ctx) {
-        const chatId = msg.key.remoteJid;
-        const target = args.join(' ').trim() || null;
-        try {
-            await sock.sendMessage(chatId, { react: { text: '💀', key: msg.key } });
-            const data = await keithGet('/fun/insult');
-            if (!data.status) throw new Error(data.error || 'No data');
-            const text = typeof data.result === 'string' ? data.result : JSON.stringify(data.result);
-            const prefix_ = target ? `🎯 *${target}*, ` : '';
-            await sock.sendMessage(chatId, {
-                text: box('ROAST 💀', '🔥', [`║ ${prefix_}${text}`])
-            }, { quoted: msg });
-        } catch (e) {
-            await sock.sendMessage(chatId, { text: err('ROAST', '💀', e.message) }, { quoted: msg });
-        }
-    }
-};
-
 // ── Joke ────────────────────────────────────────────────────────────────────
 
 const jokeCmd = {
@@ -291,6 +266,6 @@ const quoteAudioCmd = {
 
 module.exports = [
     truthCmd, dareCmd, wyrCmd, paranoiaCmd, pickuplineCmd,
-    factCmd, nhieCmd, insultCmd, jokeCmd, memeCmd,
+    factCmd, nhieCmd, jokeCmd, memeCmd,
     quizCmd, quoteCmd, quoteAudioCmd,
 ];
