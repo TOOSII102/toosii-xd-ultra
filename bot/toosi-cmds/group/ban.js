@@ -20,15 +20,10 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        const { ok, isBotAdmin } = await checkPrivilege(sock, chatId, msg, ctx);
+        const { ok } = await checkPrivilege(sock, chatId, msg, ctx);
         if (!ok) {
             return sock.sendMessage(chatId, {
                 text: `╔═|〔  BAN 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═|〔 ${name} 〕`
-            }, { quoted: msg });
-        }
-        if (!isBotAdmin) {
-            return sock.sendMessage(chatId, {
-                text: `╔═|〔  BAN 〕\n║\n║ ▸ *Status* : ❌ Bot is not an admin\n║ ▸ *Reason* : Promote the bot first\n║\n╚═|〔 ${name} 〕`
             }, { quoted: msg });
         }
 
@@ -46,8 +41,11 @@ module.exports = {
                 text: `╔═|〔  BAN 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Status* : ✅ Removed from group\n║\n╚═|〔 ${name} 〕`
             }, { quoted: msg });
         } catch (e) {
+            const reason = /not-authorized|forbidden/i.test(e.message)
+                ? 'Bot is not an admin — promote the bot first'
+                : e.message;
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  BAN 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  BAN 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${reason}\n║\n╚═|〔 ${name} 〕`
             }, { quoted: msg });
         }
     }

@@ -150,35 +150,27 @@ function _lookupName(jid, resolvedDisplay) {
 
 /**
  * Check if the message sender is privileged (owner, sudo, or group admin).
- * Also returns whether the bot itself is a group admin.
- * @returns {{ ok: boolean, isBotAdmin: boolean }}
+ *
+ * NOTE: Bot admin status is intentionally NOT checked here — participant lookups
+ * fail for LID-based groups.  Commands that require the bot to be admin should
+ * attempt their action and catch the resulting WhatsApp error instead.
+ *
+ * @returns {{ ok: boolean }}
  */
 async function checkPrivilege(sock, chatId, msg, ctx) {
-    if (ctx?.isOwnerUser || ctx?.isSudoUser) {
-        // Still check bot admin status
-        const senderJid = sock.user?.id || '';
-        const botNum    = senderJid.split('@')[0].split(':')[0];
-        try {
-            const meta    = await sock.groupMetadata(chatId);
-            const botPart = meta.participants.find(p => (p.id || '').split('@')[0].split(':')[0] === botNum);
-            const isBotAdmin = botPart?.admin === 'admin' || botPart?.admin === 'superadmin';
-            return { ok: true, isBotAdmin };
-        } catch { return { ok: true, isBotAdmin: false }; }
-    }
+    if (ctx?.isOwnerUser || ctx?.isSudoUser) return { ok: true };
+
     const senderJid = msg.key.participant || msg.key.remoteJid;
     const senderNum = senderJid.split('@')[0].split(':')[0];
-    const botNum    = (sock.user?.id || '').split('@')[0].split(':')[0];
     try {
         const meta       = await sock.groupMetadata(chatId);
         const senderPart = meta.participants.find(p => {
             const pNum = (p.id || '').split('@')[0].split(':')[0];
             return pNum === senderNum || p.id === senderJid;
         });
-        const botPart    = meta.participants.find(p => (p.id || '').split('@')[0].split(':')[0] === botNum);
-        const ok         = senderPart?.admin === 'admin' || senderPart?.admin === 'superadmin';
-        const isBotAdmin = botPart?.admin    === 'admin' || botPart?.admin    === 'superadmin';
-        return { ok, isBotAdmin };
-    } catch { return { ok: false, isBotAdmin: false }; }
+        const ok = senderPart?.admin === 'admin' || senderPart?.admin === 'superadmin';
+        return { ok };
+    } catch { return { ok: false }; }
 }
 
 module.exports = { getTarget, resolveDisplay, resolvePhone, resolveDisplayWithName, checkPrivilege };
