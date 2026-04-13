@@ -37,6 +37,8 @@ module.exports = {
         }
 
         try {
+            await sock.sendMessage(chatId, { react: { text: '🎵', key: msg.key } });
+
             let buf, title, channel, duration, quality;
 
             // ── Primary: casper search + download ─────────────────────────

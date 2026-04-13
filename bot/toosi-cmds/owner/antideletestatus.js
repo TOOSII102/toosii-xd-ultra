@@ -6,6 +6,7 @@ const config                   = require('../../config');
 const _store   = new Map();
 const MAX_MSGS = 200;
 let   _sock    = null;
+let   _resolveLid = null;
 
 function _addToStore(msg) {
     if (!msg?.key?.id || !msg.message) return;
@@ -16,7 +17,21 @@ function _addToStore(msg) {
     }
 }
 
-function initStatusAntidelete(sock) { _sock = sock; return Promise.resolve(); }
+function _resolveNum(jid) {
+    if (!jid) return null;
+    const raw = jid.split('@')[0].split(':')[0];
+    if (jid.includes('@lid') && _resolveLid) {
+        const resolved = _resolveLid(jid);
+        if (resolved && resolved !== raw) return resolved;
+    }
+    return raw;
+}
+
+function initStatusAntidelete(sock, resolveLidFn) {
+    _sock = sock;
+    if (resolveLidFn) _resolveLid = resolveLidFn;
+    return Promise.resolve();
+}
 
 async function statusAntideleteStoreMessage(msg) {
     if (msg?.message) _addToStore(msg);
@@ -39,8 +54,17 @@ async function statusAntideleteHandleUpdate(update) {
         const ownerJid = `${(config.OWNER_NUMBER || '').replace(/[^0-9]/g, '')}@s.whatsapp.net`;
         if (!ownerJid || ownerJid === '@s.whatsapp.net') return;
 
-        const sender = (msg.key.participant || msg.key.remoteJid || '').split('@')[0].split(':')[0];
-        const header = `╔═|〔  STATUS RECOVERED 〕\n║\n║ ▸ *From* : +${sender}\n║\n╚═|〔 ${getBotName()} 〕`;
+        const senderJid = msg.key.participant || msg.key.remoteJid || '';
+        const sender    = _resolveNum(senderJid) || senderJid.split('@')[0].split(':')[0] || 'Unknown';
+
+        const deletedByJid = update?.key?.participant || update?.key?.fromMe ? senderJid : senderJid;
+        const deletedBy    = _resolveNum(deletedByJid) || sender;
+
+        const header =
+            `╔═|〔  STATUS RECOVERED 〕\n║\n` +
+            `║ ▸ *Posted By*  : +${sender}\n` +
+            `║ ▸ *Deleted By* : +${deletedBy}\n` +
+            `║\n╚═|〔 ${getBotName()} 〕`;
 
         const content = msg.message?.ephemeralMessage?.message || msg.message;
         const text    = content?.conversation || content?.extendedTextMessage?.text;
@@ -61,7 +85,10 @@ async function statusAntideleteHandleUpdate(update) {
     } catch {}
 }
 
-function updateStatusAntideleteSock(sock) { _sock = sock; }
+function updateStatusAntideleteSock(sock, resolveLidFn) {
+    _sock = sock;
+    if (resolveLidFn) _resolveLid = resolveLidFn;
+}
 
 module.exports = {
     initStatusAntidelete,

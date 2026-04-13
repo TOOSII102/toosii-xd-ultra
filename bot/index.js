@@ -4983,13 +4983,13 @@ async function startBot(loginMode = 'auto', loginData = null) {
                 
                 if (!statusAntideleteInitDone) {
                     statusAntideleteInitDone = true;
-                    initStatusAntidelete(sock).catch(err => {
+                    initStatusAntidelete(sock, resolvePhoneFromLid).catch(err => {
                         console.error('❌ Status Antidelete init error:', err.message);
                         statusAntideleteInitDone = false;
                     });
                     initStatusReplyListener(sock, OWNER_CLEAN_JID);
                 } else {
-                    updateStatusAntideleteSock(sock);
+                    updateStatusAntideleteSock(sock, resolvePhoneFromLid);
                 }
                 
                 
