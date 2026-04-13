@@ -4363,7 +4363,7 @@ class LoginManager {
     async pairingCodeMode() {
         console.log(chalk.cyan('\n📱 PAIRING CODE LOGIN'));
         console.log(chalk.gray('Enter phone number with country code (without +)'));
-        console.log(chalk.gray('Example: 254788710904'));
+        console.log(chalk.gray('Example: 254712345678'));
         
         const phone = await this.ask('Phone number: ');
         const cleanPhone = phone.replace(/[^0-9]/g, '');
