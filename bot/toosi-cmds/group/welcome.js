@@ -32,6 +32,13 @@ function saveCfg(d) {
     fs.writeFileSync(CFG_FILE, JSON.stringify(d, null, 2));
 }
 
+
+// Reset all groups to OFF on every bot startup
+try {
+    const _boot = loadCfg(); let _dirty = false;
+    for (const id of Object.keys(_boot.groups || {})) { if (_boot.groups[id]?.enabled) { _boot.groups[id].enabled = false; _dirty = true; } }
+    if (_dirty) saveCfg(_boot);
+} catch {}
 // ── variable substitution ─────────────────────────────────────────────────────
 function applyVars(template, vars) {
     return template
