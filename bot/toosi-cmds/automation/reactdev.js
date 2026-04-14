@@ -53,7 +53,7 @@ module.exports = {
 
         if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -62,7 +62,7 @@ module.exports = {
 
         if (!action || action === 'status') {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ${cfg.enabled ? '✅ ON' : '❌ OFF'}\n║ ▸ *Emoji* : ${cfg.emoji || '🔥'}\n║ ▸ *Usage* : ${prefix}reactdev on/off/emoji <emoji>\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ${cfg.enabled ? '✅ ON' : '❌ OFF'}\n║ ▸ *Emoji* : ${cfg.emoji || '🔥'}\n║ ▸ *Usage* : ${prefix}reactdev on/off/emoji <emoji>\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -70,17 +70,17 @@ module.exports = {
             const data = get('reactdev');
             data.emoji = args[1];
             set('reactdev', data);
-            return sock.sendMessage(chatId, { text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *Emoji* : ${args[1]} saved\n║\n╚═|〔 ${name} 〕` }, { quoted: msg });
+            return sock.sendMessage(chatId, { text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *Emoji* : ${args[1]} saved\n║\n╚═╝` }, { quoted: msg });
         }
 
-        if (action === 'on')  { const d = get('reactdev'); d.enabled = true;  set('reactdev', d); return sock.sendMessage(chatId, { text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ✅ Enabled\n║\n╚═|〔 ${name} 〕` }, { quoted: msg }); }
-        if (action === 'off') { const d = get('reactdev'); d.enabled = false; set('reactdev', d); return sock.sendMessage(chatId, { text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ❌ Disabled\n║\n╚═|〔 ${name} 〕` }, { quoted: msg }); }
+        if (action === 'on')  { const d = get('reactdev'); d.enabled = true;  set('reactdev', d); return sock.sendMessage(chatId, { text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ✅ Enabled\n║\n╚═╝` }, { quoted: msg }); }
+        if (action === 'off') { const d = get('reactdev'); d.enabled = false; set('reactdev', d); return sock.sendMessage(chatId, { text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ❌ Disabled\n║\n╚═╝` }, { quoted: msg }); }
 
         // unknown arg → ignore silently; only toggle when no arg given
         if (action) return;
         const now = toggle('reactdev');
         return sock.sendMessage(chatId, {
-            text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ${now ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  REACT DEV 〕\n║\n║ ▸ *State* : ${now ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═╝`
         }, { quoted: msg });
     }
 };
