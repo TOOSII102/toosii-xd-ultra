@@ -16,14 +16,14 @@ module.exports = {
 
         if (!chatId.endsWith('@g.us')) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  HIDETAG 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  HIDETAG 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
         const { ok } = await checkPrivilege(sock, chatId, msg, ctx);
         if (!ok) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  HIDETAG 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  HIDETAG 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -34,7 +34,7 @@ module.exports = {
             await sock.sendMessage(chatId, { text, mentions: jids });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  HIDETAG 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  HIDETAG 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
