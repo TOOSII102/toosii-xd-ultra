@@ -1,54 +1,87 @@
-const { execSync } = require('child_process');
-  const https = require('https');
+'use strict';
+
+  // GitHub-based auto-updater — downloads files directly from GitHub API.
+  // Works on any platform (Heroku, bot-hosting, VPS) — no git required.
+
+  const https   = require('https');
+  const fs      = require('fs');
+  const path    = require('path');
+  const { spawn } = require('child_process');
   const { getBotName } = require('../../lib/botname');
 
   const REPO   = 'TOOSII102/toosii-xd-ultra';
   const BRANCH = 'main';
 
-  const IS_HEROKU  = !!process.env.DYNO;
-  const IS_REPLIT  = !!process.env.REPL_ID;
-  const PLATFORM   = IS_HEROKU ? 'Heroku' : IS_REPLIT ? 'Replit' : 'VPS / Bot-Hosting';
+  // Absolute path to the bot/ directory (2 levels up from toosi-cmds/owner/)
+  const BOT_DIR = path.resolve(__dirname, '../..');
 
-  function run(cmd, opts = {}) {
-      return execSync(cmd, { encoding: 'utf8', timeout: 120000, stdio: 'pipe', ...opts }).trim();
+  // Files/dirs inside bot/ that should NEVER be overwritten during update
+  const PROTECTED = [
+      'session',        // WhatsApp auth — overwriting = logout
+      'data',           // runtime config set by the owner
+      'yt-dlp',         // binary executable
+      'package-lock.json',
+      '.env',           // owner secrets
+  ];
+
+  function httpsGetBuffer(url) {
+      return new Promise((resolve, reject) => {
+          https.get(url, { headers: { 'User-Agent': 'TOOSII-XD-Bot' } }, res => {
+              if (res.statusCode === 301 || res.statusCode === 302) {
+                  return httpsGetBuffer(res.headers.location).then(resolve).catch(reject);
+              }
+              if (res.statusCode !== 200) {
+                  return reject(new Error(`HTTP ${res.statusCode} for ${url}`));
+              }
+              const chunks = [];
+              res.on('data', c => chunks.push(c));
+              res.on('end', () => resolve(Buffer.concat(chunks)));
+          }).on('error', reject);
+      });
   }
 
-  function isGitRepo() {
-      try { run('git rev-parse --is-inside-work-tree'); return true; } catch { return false; }
-  }
-
-  function getCurrentCommit() {
-      try { return run('git rev-parse HEAD'); } catch { return null; }
+  async function getJson(url) {
+      const buf = await httpsGetBuffer(url);
+      return JSON.parse(buf.toString('utf8'));
   }
 
   async function getLatestCommit() {
-      return new Promise((resolve, reject) => {
-          const url = `https://api.github.com/repos/${REPO}/commits/${BRANCH}`;
-          https.get(url, { headers: { 'User-Agent': 'TOOSII-XD-Bot' } }, res => {
-              let data = '';
-              res.on('data', c => data += c);
-              res.on('end', () => {
-                  try {
-                      const json = JSON.parse(data);
-                      resolve({ sha: json.sha, message: json.commit?.message?.split('\n')[0] || '' });
-                  } catch { reject(new Error('Failed to parse GitHub response')); }
-              });
-          }).on('error', reject);
-      });
+      const json = await getJson(`https://api.github.com/repos/${REPO}/commits/${BRANCH}`);
+      return { sha: json.sha, message: json.commit?.message?.split('\n')[0] || '' };
+  }
+
+  async function getRepoTree(sha) {
+      const json = await getJson(`https://api.github.com/repos/${REPO}/git/trees/${sha}?recursive=1`);
+      return json.tree || [];
+  }
+
+  function getSavedSha() {
+      try { return fs.readFileSync(path.join(BOT_DIR, '.last_update'), 'utf8').trim(); } catch { return null; }
+  }
+
+  function saveSha(sha) {
+      try { fs.writeFileSync(path.join(BOT_DIR, '.last_update'), sha, 'utf8'); } catch {}
+  }
+
+  function isProtected(repoPath) {
+      // repoPath is like "bot/session/creds.json" or "bot/.env"
+      const rel = repoPath.slice('bot/'.length); // "session/creds.json"
+      return PROTECTED.some(p => rel === p || rel.startsWith(p + '/') || rel.startsWith('.' + p));
   }
 
   module.exports = {
       name:        'update',
       aliases:     ['upgrade', 'pullupdate'],
-      description: 'Pull latest changes from GitHub and restart the bot',
+      description: 'Download latest code from GitHub and restart',
       category:    'owner',
       ownerOnly:   true,
 
       async execute(sock, msg, args, prefix, ctx) {
           const chatId  = msg.key.remoteJid;
-          try { await sock.sendMessage(chatId, { react: { text: '🔄', key: msg.key } }); } catch {}
           const botName = getBotName();
           const foot    = `╚═|〔 ${botName} 〕`;
+
+          try { await sock.sendMessage(chatId, { react: { text: '🔄', key: msg.key } }); } catch {}
 
           if (!ctx.isOwner()) {
               return sock.sendMessage(chatId, {
@@ -56,96 +89,78 @@ const { execSync } = require('child_process');
               }, { quoted: msg });
           }
 
+          // Step 1 — get latest commit from GitHub
           let latest;
           try { latest = await getLatestCommit(); }
           catch (err) {
               return sock.sendMessage(chatId, {
-                  text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : ❌ GitHub unreachable\n║ ▸ *Reason* : ${err.message}\n║\n${foot}`
+                  text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : ❌ Cannot reach GitHub\n║ ▸ *Reason* : ${err.message}\n║\n${foot}`
               }, { quoted: msg });
           }
 
-          const shortLatest = latest.sha?.slice(0, 7) || 'unknown';
+          const shortSha = latest.sha.slice(0, 7);
+          const savedSha = getSavedSha();
 
-          if (IS_HEROKU) {
+          if (savedSha === latest.sha) {
               return sock.sendMessage(chatId, {
                   text: [
                       `╔═|〔  UPDATE 〕`,
                       `║`,
-                      `║ ▸ *Platform* : ☁️ Heroku`,
-                      `║ ▸ *Status*   : ℹ️ Git pull not supported on Heroku`,
-                      `║ ▸ *Latest*   : ${shortLatest} — ${latest.message}`,
-                      `║`,
-                      `║  Deploy via Heroku Dashboard → Manual Deploy`,
+                      `║ ▸ *Status*  : ✅ Already up to date`,
+                      `║ ▸ *Commit*  : ${shortSha}`,
+                      `║ ▸ *Changes* : ${latest.message}`,
                       `║`,
                       `${foot}`,
                   ].join('\n')
               }, { quoted: msg });
           }
 
-          // Files were uploaded manually — no .git folder exists in the container
-          if (!isGitRepo()) {
+          // Step 2 — notify and start downloading
+          await sock.sendMessage(chatId, {
+              text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : 📥 Downloading from GitHub...\n║ ▸ *Commit* : ${shortSha}\n║ ▸ ${latest.message}\n║\n${foot}`
+          }, { quoted: msg });
+
+          // Step 3 — fetch file tree
+          let tree;
+          try { tree = await getRepoTree(latest.sha); }
+          catch (err) {
               return sock.sendMessage(chatId, {
-                  text: [
-                      `╔═|〔  UPDATE 〕`,
-                      `║`,
-                      `║ ▸ *Platform* : 🖥️ Bot-Hosting (files uploaded manually)`,
-                      `║ ▸ *Status*   : ℹ️ Not a git repository`,
-                      `║ ▸ *Latest*   : ${shortLatest}`,
-                      `║ ▸ *Message*  : ${latest.message}`,
-                      `║`,
-                      `║  Your files were uploaded directly, not cloned.`,
-                      `║  To update, go to your panel → Files tab,`,
-                      `║  delete the old files and re-upload the new`,
-                      `║  ones from GitHub, then use ${prefix}restart.`,
-                      `║`,
-                      `${foot}`,
-                  ].join('\n')
+                  text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : ❌ Failed to fetch file list\n║ ▸ *Reason* : ${err.message}\n║\n${foot}`
               }, { quoted: msg });
           }
 
-          const current = getCurrentCommit();
-          const shortCurrent = current?.slice(0, 7) || 'unknown';
+          // Step 4 — filter to bot/ files only, skip protected paths
+          const botFiles = tree.filter(f =>
+              f.type === 'blob' &&
+              f.path.startsWith('bot/') &&
+              !isProtected(f.path)
+          );
 
-          if (current && latest.sha && current === latest.sha) {
-              return sock.sendMessage(chatId, {
-                  text: [
-                      `╔═|〔  UPDATE 〕`,
-                      `║`,
-                      `║ ▸ *Status*   : ✅ Already up to date`,
-                      `║ ▸ *Platform* : ${PLATFORM}`,
-                      `║ ▸ *Commit*   : ${shortCurrent}`,
-                      `║ ▸ *Changes*  : ${latest.message}`,
-                      `║`,
-                      `${foot}`,
-                  ].join('\n')
-              }, { quoted: msg });
+          // Step 5 — download and write each file
+          let updated = 0, failed = 0;
+          for (const file of botFiles) {
+              try {
+                  const rawUrl = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${file.path}`;
+                  const content = await httpsGetBuffer(rawUrl);
+                  const localPath = path.join(BOT_DIR, file.path.slice('bot/'.length));
+                  fs.mkdirSync(path.dirname(localPath), { recursive: true });
+                  fs.writeFileSync(localPath, content);
+                  updated++;
+              } catch { failed++; }
           }
 
-          let pullErr, npmErr;
-          try {
-              run(`git fetch origin ${BRANCH}`);
-              run(`git reset --hard origin/${BRANCH}`);
-          } catch (err) { pullErr = err.message?.slice(0, 100); }
+          // Step 6 — save new commit SHA so next .update knows what version is installed
+          saveSha(latest.sha);
 
-          if (pullErr) {
-              return sock.sendMessage(chatId, {
-                  text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : ❌ Pull failed\n║ ▸ *Reason* : ${pullErr}\n║\n${foot}`
-              }, { quoted: msg });
-          }
-
-          try { run('npm install --production', { cwd: process.cwd() }); }
-          catch (e) { npmErr = true; }
-
+          // Step 7 — confirm and restart
           await sock.sendMessage(chatId, {
               text: [
                   `╔═|〔  UPDATE 〕`,
                   `║`,
-                  `║ ▸ *Status*   : ✅ Updated successfully`,
-                  `║ ▸ *Platform* : ${PLATFORM}`,
-                  `║ ▸ *From*     : ${shortCurrent}`,
-                  `║ ▸ *To*       : ${shortLatest}`,
-                  `║ ▸ *Changes*  : ${latest.message}`,
-                  `║ ▸ *Deps*     : ${npmErr ? '⚠️ npm had warnings' : '✅ Installed'}`,
+                  `║ ▸ *Status*  : ✅ Updated successfully`,
+                  `║ ▸ *Commit*  : ${shortSha}`,
+                  `║ ▸ *Changes* : ${latest.message}`,
+                  `║ ▸ *Files*   : ${updated} updated${failed ? `, ${failed} skipped` : ''}`,
                   `║`,
                   `║ ▸ 🔄 Restarting in 3s...`,
                   `║`,
@@ -153,7 +168,16 @@ const { execSync } = require('child_process');
               ].join('\n')
           }, { quoted: msg });
 
-          setTimeout(() => process.exit(0), 3000);
+          setTimeout(() => {
+              const child = spawn(process.execPath, process.argv.slice(1), {
+                  detached: true,
+                  stdio:    'inherit',
+                  env:      process.env,
+                  cwd:      process.cwd()
+              });
+              child.unref();
+              setTimeout(() => process.exit(0), 1000);
+          }, 3000);
       },
   };
   
