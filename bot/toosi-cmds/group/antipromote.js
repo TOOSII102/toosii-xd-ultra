@@ -15,6 +15,13 @@ function save(data) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+
+// Reset all groups to OFF on every bot startup
+try {
+    const _boot = load(); let _dirty = false;
+    for (const id of Object.keys(_boot)) { if (_boot[id]) { _boot[id] = false; _dirty = true; } }
+    if (_dirty) save(_boot);
+} catch {}
 function isEnabled(chatId) { return !!load()[chatId]; }
 
 // Called from index.js on group-participants-update events
