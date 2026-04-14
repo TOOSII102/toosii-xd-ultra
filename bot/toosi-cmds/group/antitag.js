@@ -204,7 +204,7 @@ function setupAntiTagListener(sock) {
 
             if (action === 'delete') {
                 await sock.sendMessage(chatId, {
-                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Action* : 🗑️ Message deleted\n║\n╚═|〔 ${botName} 〕`
+                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Action* : 🗑️ Message deleted\n║\n╚═╝`
                 });
 
             } else if (action === 'warn') {
@@ -223,18 +223,18 @@ function setupAntiTagListener(sock) {
                 }
                 saveWarns(warns);
                 await sock.sendMessage(chatId, {
-                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Reason* : Tagging all members\n║ ▸ *Warns*  : ${Math.min(count, MAX)}/${MAX}${extra}\n║\n╚═|〔 ${botName} 〕`
+                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Reason* : Tagging all members\n║ ▸ *Warns*  : ${Math.min(count, MAX)}/${MAX}${extra}\n║\n╚═╝`
                 });
 
             } else if (action === 'remove' || action === 'kick') {
                 try {
                     await sock.groupParticipantsUpdate(chatId, [sender], 'remove');
                     await sock.sendMessage(chatId, {
-                        text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Action* : 🚫 Removed (tagged all)\n║\n╚═|〔 ${botName} 〕`
+                        text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Action* : 🚫 Removed (tagged all)\n║\n╚═╝`
                     });
                 } catch {
                     await sock.sendMessage(chatId, {
-                        text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Action* : ❌ Remove failed (bot not admin?)\n║\n╚═|〔 ${botName} 〕`
+                        text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Action* : ❌ Remove failed (bot not admin?)\n║\n╚═╝`
                     });
                 }
             }
@@ -257,12 +257,12 @@ module.exports = {
 
         if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═╝`
             }, { quoted: msg });
         }
         if (!chatId.endsWith('@g.us')) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Status* : ❌ Groups only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Status* : ❌ Groups only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -302,7 +302,7 @@ module.exports = {
                     `║   ${prefix}antitag exempt @user`,
                     `║   ${prefix}antitag unexempt @user`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
@@ -311,7 +311,7 @@ module.exports = {
         if (sub === 'on' || sub === 'off') {
             gcfg.enabled = sub === 'on'; save();
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *State* : ${gcfg.enabled ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *State* : ${gcfg.enabled ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -319,7 +319,7 @@ module.exports = {
         if (['delete', 'warn', 'remove', 'kick'].includes(sub)) {
             gcfg.action = sub === 'kick' ? 'remove' : sub; save();
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Action* : ${actionIcon[sub]}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Action* : ${actionIcon[sub]}\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -328,12 +328,12 @@ module.exports = {
             const n = parseInt(sub2);
             if (isNaN(n) || n < 1) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Usage* : ${prefix}antitag threshold <number>\n║ ▸ *Tip*   : 0 = group-tag only, 5 = tag 5+ members\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Usage* : ${prefix}antitag threshold <number>\n║ ▸ *Tip*   : 0 = group-tag only, 5 = tag 5+ members\n║\n╚═╝`
                 }, { quoted: msg });
             }
             gcfg.threshold = n; save();
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Threshold* : ${n} mentions\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Threshold* : ${n} mentions\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -342,7 +342,7 @@ module.exports = {
             gcfg.exemptAdmins = sub2 === 'on' ? true : sub2 === 'off' ? false : !gcfg.exemptAdmins;
             save();
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Exempt group admins* : ${flag(gcfg.exemptAdmins)}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Exempt group admins* : ${flag(gcfg.exemptAdmins)}\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -351,7 +351,7 @@ module.exports = {
             gcfg.exemptSudos = sub2 === 'on' ? true : sub2 === 'off' ? false : !gcfg.exemptSudos;
             save();
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Exempt owner/sudos* : ${flag(gcfg.exemptSudos)}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Exempt owner/sudos* : ${flag(gcfg.exemptSudos)}\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -361,7 +361,7 @@ module.exports = {
             const target = ctx2?.participant || ctx2?.mentionedJid?.[0] || null;
             if (!target) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ Reply to or @mention the user\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ Reply to or @mention the user\n║\n╚═╝`
                 }, { quoted: msg });
             }
             const tNum = bareNum(target);
@@ -369,13 +369,13 @@ module.exports = {
                 if (!gcfg.exempt.some(e => bareNum(e) === tNum)) gcfg.exempt.push(target);
                 save();
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Exempted* : +${tNum}\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Exempted* : +${tNum}\n║\n╚═╝`
                 }, { quoted: msg });
             } else {
                 gcfg.exempt = gcfg.exempt.filter(e => bareNum(e) !== tNum);
                 save();
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Removed* : +${tNum}\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *Removed* : +${tNum}\n║\n╚═╝`
                 }, { quoted: msg });
             }
         }
@@ -384,7 +384,7 @@ module.exports = {
         if (sub) return;
         gcfg.enabled = !gcfg.enabled; save();
         return sock.sendMessage(chatId, {
-            text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *State* : ${gcfg.enabled ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  ANTI TAG 〕\n║\n║ ▸ *State* : ${gcfg.enabled ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═╝`
         }, { quoted: msg });
     }
 };
