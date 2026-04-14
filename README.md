@@ -204,16 +204,11 @@ node index.js
 ### 📬 Contact & Support
 
 [![Telegram](https://img.shields.io/badge/Telegram-%40toosiitech-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/toosiitech)
-[![WhatsApp](https://img.shields.io/badge/WhatsApp-+254746677793-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/254746677793)
-[![WhatsApp](https://img.shields.io/badge/WhatsApp-+254748340864-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/254748340864)
 
 ```
   ┌─────────────────────────────────────────────────────────────┐
   │                                                             │
   │   📱  Telegram   →  t.me/toosiitech                        │
-  │                                                             │
-  │   💬  WhatsApp   →  wa.me/254746677793                     │
-  │   💬  WhatsApp   →  wa.me/254748340864                     │
   │                                                             │
   │   🌐  Session Generator →                                  │
   │        toosiitechdevelopertools.zone.id/session             │
