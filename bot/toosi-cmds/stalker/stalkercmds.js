@@ -19,12 +19,12 @@ function fmtDate(d) {
 
 function wrap(title, icon, lines) {
     const name = getBotName();
-    return `╔═|〔  ${icon} ${title} 〕\n║\n${lines.join('\n')}\n║\n╚═|〔 ${name} 〕`;
+    return `╔═|〔  ${icon} ${title} 〕\n║\n${lines.join('\n')}\n║\n╚═╝`;
 }
 
 function errMsg(title, icon, reason) {
     const name = getBotName();
-    return `╔═|〔  ${icon} ${title} 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${reason}\n║\n╚═|〔 ${name} 〕`;
+    return `╔═|〔  ${icon} ${title} 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${reason}\n║\n╚═╝`;
 }
 
 async function ghFetch(path) {
