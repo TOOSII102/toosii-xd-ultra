@@ -109,8 +109,14 @@
         } catch {}
     }
 
-    module.exports = {
-        initTables,
+    // ── Legacy compat: getClient() — returned by db.getClient() in index.js ────────
+  // authState.js and getSessionStats() receive this but don't use it; stub is enough.
+  function getClient() {
+      return { db: null, type: 'json-file' };
+  }
+
+  module.exports = {
+        initTables, getClient,
         getConfig, setConfig, getAllConfig, deleteConfig,
         getWarnings, addWarning, removeWarning, getAllWarnings,
         migrateJSONToConfig,
