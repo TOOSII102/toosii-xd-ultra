@@ -54,7 +54,7 @@ module.exports = {
                 `║`,
                 `║ ✨ ${compliment}`,
                 `║`,
-                `╚═|〔 ${name} 〕`,
+                `╚═╝`,
             ].join('\n'),
             mentions: [`${target}@s.whatsapp.net`],
         }, { quoted: msg });
