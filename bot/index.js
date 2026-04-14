@@ -8095,6 +8095,11 @@ async function main() {
         }
         
         try { await _dbInitPromise; } catch {}
+        if (!_cache_prefix_config) {
+            try { _cache_prefix_config = await _loadConfigCache('prefix_config', { prefix: DEFAULT_PREFIX }); } catch {}
+        }
+        prefixCache = loadPrefixFromFiles();
+        isPrefixless = prefixCache === '' ? true : false;
         printStartupBox();
         await setupWebServer();
         setupHerokuKeepAlive();
