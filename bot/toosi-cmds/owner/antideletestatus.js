@@ -64,7 +64,7 @@ async function statusAntideleteHandleUpdate(update) {
             `╔═|〔  STATUS RECOVERED 〕\n║\n` +
             `║ ▸ *Posted By*  : +${sender}\n` +
             `║ ▸ *Deleted By* : +${deletedBy}\n` +
-            `║\n╚═|〔 ${getBotName()} 〕`;
+            `║\n╚═╝`;
 
         const content = msg.message?.ephemeralMessage?.message || msg.message;
         const text    = content?.conversation || content?.extendedTextMessage?.text;
@@ -107,12 +107,12 @@ module.exports = {
         const name   = getBotName();
 
         if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
-            return sock.sendMessage(chatId, { text: `╔═|〔  ANTI DELETE STATUS 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═|〔 ${name} 〕` }, { quoted: msg });
+            return sock.sendMessage(chatId, { text: `╔═|〔  ANTI DELETE STATUS 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═╝` }, { quoted: msg });
         }
 
         const now = toggle('antideletestatus');
         return sock.sendMessage(chatId, {
-            text: `╔═|〔  ANTI DELETE STATUS 〕\n║\n║ ▸ *State*  : ${now ? '✅ Enabled' : '❌ Disabled'}\n║ ▸ *Note*   : Deleted statuses sent to your DM\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  ANTI DELETE STATUS 〕\n║\n║ ▸ *State*  : ${now ? '✅ Enabled' : '❌ Disabled'}\n║ ▸ *Note*   : Deleted statuses sent to your DM\n║\n╚═╝`
         }, { quoted: msg });
     }
 };
