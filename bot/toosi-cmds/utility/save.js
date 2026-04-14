@@ -7,7 +7,7 @@ const { getStatusSender }      = require('../../lib/status-map');
 const config                   = require('../../config');
 
 const H = '╔═|〔  💾 SAVE STATUS 〕';
-const F = () => `╚═|〔 ${getBotName()} 〕`;
+const F = () => `╚═╝`;
 
 function unwrapViewOnce(msg) {
     return msg?.viewOnceMessageV2?.message
