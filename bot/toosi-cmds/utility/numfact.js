@@ -43,7 +43,7 @@ module.exports = {
                     `║ ▸ *Example* : ${prefix}numfact 1969 year`,
                     `║ ▸ *Example* : ${prefix}numfact random math`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
@@ -60,13 +60,13 @@ module.exports = {
                     `║`,
                     `║ ${data.text}`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
 
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  NUMBER FACT 〕\n║\n║ ▸ *Status* : ❌ ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  NUMBER FACT 〕\n║\n║ ▸ *Status* : ❌ ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
