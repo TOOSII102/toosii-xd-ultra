@@ -65,7 +65,7 @@ const movieCmd = {
         const name   = getBotName();
         const query  = args.join(' ').trim();
         if (!query) return sock.sendMessage(chatId, {
-            text: `╔═|〔  🎬 MOVIE INFO 〕\n║\n║ ▸ *Usage*   : ${prefix}movie <title>\n║ ▸ *Example* : ${prefix}movie avengers endgame\n║ ▸ *Tip*     : Use ${prefix}trailer <title> for the trailer\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  🎬 MOVIE INFO 〕\n║\n║ ▸ *Usage*   : ${prefix}movie <title>\n║ ▸ *Example* : ${prefix}movie avengers endgame\n║ ▸ *Tip*     : Use ${prefix}trailer <title> for the trailer\n║\n╚═╝`
         }, { quoted: msg });
 
         try {
@@ -97,7 +97,7 @@ const movieCmd = {
                 `║ ▸ *Country* : ${country} | 🗣 ${lang}\n` +
                 `║\n║ 📝 *Plot*: ${(data.description || 'N/A').substring(0, 200)}…\n║\n` +
                 `║ 🎬 ${prefix}trailer ${data.title} — for trailer video\n║\n` +
-                `╚═|〔 ${name} 〕`;
+                `╚═╝`;
 
             const posterUrl = data.banner || data.poster_org;
             if (posterUrl) {
@@ -111,7 +111,7 @@ const movieCmd = {
 
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎬 MOVIE INFO 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🎬 MOVIE INFO 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
@@ -128,7 +128,7 @@ const mboxCmd = {
         const name   = getBotName();
         const query  = args.join(' ').trim();
         if (!query) return sock.sendMessage(chatId, {
-            text: `╔═|〔  🎥 MOVIE SEARCH 〕\n║\n║ ▸ *Usage*   : ${prefix}mbox <title>\n║ ▸ *Example* : ${prefix}mbox avengers\n║ ▸ *Tip*     : ${prefix}movie <title> for full details\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  🎥 MOVIE SEARCH 〕\n║\n║ ▸ *Usage*   : ${prefix}mbox <title>\n║ ▸ *Example* : ${prefix}mbox avengers\n║ ▸ *Tip*     : ${prefix}movie <title> for full details\n║\n╚═╝`
         }, { quoted: msg });
         try {
             await sock.sendMessage(chatId, { react: { text: '🎥', key: msg.key } });
@@ -141,11 +141,11 @@ const mboxCmd = {
             ).join('\n║\n');
 
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎥 MOVIE SEARCH 〕\n║\n║ 🔍 *${query}* — ${results.length} results\n║\n${list}\n║\n║ 💡 ${prefix}trailer <title> to get trailer video\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🎥 MOVIE SEARCH 〕\n║\n║ 🔍 *${query}* — ${results.length} results\n║\n${list}\n║\n║ 💡 ${prefix}trailer <title> to get trailer video\n║\n╚═╝`
             }, { quoted: msg });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎥 MOVIE SEARCH 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🎥 MOVIE SEARCH 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
@@ -168,11 +168,11 @@ const trendingCmd = {
             ).join('\n║\n');
             if (!list) throw new Error('No trending data available');
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  📈 TRENDING MOVIES 〕\n║\n${list}\n║\n║ 💡 ${prefix}movie <title> for full details\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  📈 TRENDING MOVIES 〕\n║\n${list}\n║\n║ 💡 ${prefix}movie <title> for full details\n║\n╚═╝`
             }, { quoted: msg });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  📈 TRENDING MOVIES 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  📈 TRENDING MOVIES 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
@@ -200,12 +200,12 @@ const hotCmd = {
 
             let text = `╔═|〔  🔥 HOT & POPULAR 〕\n║\n║ 🎬 *Top Movies*\n${fmtList(movies)}`;
             if (tvs.length) text += `\n║\n║ 📺 *Hot TV Shows*\n${fmtList(tvs)}`;
-            text += `\n║\n║ 💡 ${prefix}movie <title> for details\n║\n╚═|〔 ${name} 〕`;
+            text += `\n║\n║ 💡 ${prefix}movie <title> for details\n║\n╚═╝`;
 
             await sock.sendMessage(chatId, { text }, { quoted: msg });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🔥 HOT MOVIES 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🔥 HOT MOVIES 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
@@ -229,11 +229,11 @@ const latestCmd = {
                 `║ ▸ [${i + 1}] *${m.title}*`
             ).join('\n');
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🆕 LATEST MOVIES 〕\n║\n${list}\n║\n║ 💡 ${prefix}movie <title> for full details\n║ 💡 ${prefix}trailer <title> for trailer\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🆕 LATEST MOVIES 〕\n║\n${list}\n║\n║ 💡 ${prefix}movie <title> for full details\n║ 💡 ${prefix}trailer <title> for trailer\n║\n╚═╝`
             }, { quoted: msg });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🆕 LATEST MOVIES 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🆕 LATEST MOVIES 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
@@ -250,7 +250,7 @@ const dramaCmd = {
         const name   = getBotName();
         const query  = args.join(' ').trim();
         if (!query) return sock.sendMessage(chatId, {
-            text: `╔═|〔  🎭 TV / DRAMA SEARCH 〕\n║\n║ ▸ *Usage*   : ${prefix}drama <title>\n║ ▸ *Example* : ${prefix}drama game of thrones\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  🎭 TV / DRAMA SEARCH 〕\n║\n║ ▸ *Usage*   : ${prefix}drama <title>\n║ ▸ *Example* : ${prefix}drama game of thrones\n║\n╚═╝`
         }, { quoted: msg });
         try {
             await sock.sendMessage(chatId, { react: { text: '🎭', key: msg.key } });
@@ -262,11 +262,11 @@ const dramaCmd = {
             ).join('\n║\n');
 
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎭 TV / DRAMA SEARCH 〕\n║\n║ 🔍 *${query}*\n║\n${list}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🎭 TV / DRAMA SEARCH 〕\n║\n║ 🔍 *${query}*\n║\n${list}\n║\n╚═╝`
             }, { quoted: msg });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎭 TV / DRAMA SEARCH 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🎭 TV / DRAMA SEARCH 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
@@ -283,7 +283,7 @@ const actorCmd = {
         const name   = getBotName();
         const query  = args.join(' ').trim();
         if (!query) return sock.sendMessage(chatId, {
-            text: `╔═|〔  🎬 ACTOR SEARCH 〕\n║\n║ ▸ *Usage* : ${prefix}actor <name>\n║ ▸ *Example* : ${prefix}actor will smith\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  🎬 ACTOR SEARCH 〕\n║\n║ ▸ *Usage* : ${prefix}actor <name>\n║ ▸ *Example* : ${prefix}actor will smith\n║\n╚═╝`
         }, { quoted: msg });
         try {
             await sock.sendMessage(chatId, { react: { text: '🎬', key: msg.key } });
@@ -296,11 +296,11 @@ const actorCmd = {
             ).join('\n');
 
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎬 ACTOR SEARCH 〕\n║\n║ 🔍 *${query}*\n║\n${list}\n║\n║ 💡 ${prefix}movie <title> for full details\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🎬 ACTOR SEARCH 〕\n║\n║ 🔍 *${query}*\n║\n${list}\n║\n║ 💡 ${prefix}movie <title> for full details\n║\n╚═╝`
             }, { quoted: msg });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🎬 ACTOR SEARCH 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🎬 ACTOR SEARCH 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
