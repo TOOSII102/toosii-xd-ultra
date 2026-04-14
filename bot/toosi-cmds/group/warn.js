@@ -30,21 +30,21 @@ module.exports = [
 
             if (!chatId.endsWith('@g.us')) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  WARN 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  WARN 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
             const { ok } = await checkPrivilege(sock, chatId, msg, ctx);
             if (!ok) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  WARN 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  WARN 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
             const target = getTarget(msg, args);
             if (!target) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  WARN 〕\n║\n║ ▸ *Usage* : ${prefix}warn @user [reason]\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  WARN 〕\n║\n║ ▸ *Usage* : ${prefix}warn @user [reason]\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
@@ -65,7 +65,7 @@ module.exports = [
                 } catch {}
             }
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  WARN 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Reason* : ${reason}\n║ ▸ *Warns*  : ${Math.min(count, MAX_WARNS)}/${MAX_WARNS}${extra}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  WARN 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Reason* : ${reason}\n║ ▸ *Warns*  : ${Math.min(count, MAX_WARNS)}/${MAX_WARNS}${extra}\n║\n╚═╝`
             }, { quoted: msg });
         }
     },
@@ -81,21 +81,21 @@ module.exports = [
 
             if (!chatId.endsWith('@g.us')) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  WARNS 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  WARNS 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
             const target = getTarget(msg, args);
             if (!target) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  WARNS 〕\n║\n║ ▸ *Usage* : ${prefix}warns @user or reply a message\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  WARNS 〕\n║\n║ ▸ *Usage* : ${prefix}warns @user or reply a message\n║\n╚═╝`
                 }, { quoted: msg });
             }
             const display = await resolveDisplay(sock, chatId, target);
             const warns   = loadWarns();
             const count   = warns[getKey(chatId, target)] || 0;
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  WARNS 〕\n║\n║ ▸ *User*  : ${display}\n║ ▸ *Warns* : ${count}/${MAX_WARNS}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  WARNS 〕\n║\n║ ▸ *User*  : ${display}\n║ ▸ *Warns* : ${count}/${MAX_WARNS}\n║\n╚═╝`
             }, { quoted: msg });
         }
     },
@@ -111,21 +111,21 @@ module.exports = [
 
             if (!chatId.endsWith('@g.us')) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
             const { ok } = await checkPrivilege(sock, chatId, msg, ctx);
             if (!ok) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
             const target = getTarget(msg, args);
             if (!target) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *Usage* : ${prefix}resetwarn @user or reply a message\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *Usage* : ${prefix}resetwarn @user or reply a message\n║\n╚═╝`
                 }, { quoted: msg });
             }
             const display = await resolveDisplay(sock, chatId, target);
@@ -133,7 +133,7 @@ module.exports = [
             warns[getKey(chatId, target)] = 0;
             saveWarns(warns);
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Status* : ✅ Warnings cleared\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  RESET WARN 〕\n║\n║ ▸ *User*   : ${display}\n║ ▸ *Status* : ✅ Warnings cleared\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
