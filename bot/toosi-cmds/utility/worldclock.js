@@ -104,7 +104,7 @@ module.exports = [
                         `║ 💡 ${prefix}time <city> for any city`,
                         `║ 💡 ${prefix}time nairobi | london | tokyo`,
                         `║`,
-                        `╚═|〔 ${name} 〕`,
+                        `╚═╝`,
                     ].join('\n')
                 }, { quoted: msg });
             }
@@ -118,13 +118,13 @@ module.exports = [
 
             if (!tz) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  TIME 〕\n║\n║ ▸ ❌ City not found: *${args.join(' ')}*\n║ ▸ Try: nairobi, london, dubai, tokyo, new york\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  TIME 〕\n║\n║ ▸ ❌ City not found: *${args.join(' ')}*\n║ ▸ Try: nairobi, london, dubai, tokyo, new york\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
             const t = fmtTime(tz);
             if (!t) return sock.sendMessage(chatId, {
-                text: `╔═|〔  TIME 〕\n║\n║ ▸ ❌ Could not get time for ${args.join(' ')}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  TIME 〕\n║\n║ ▸ ❌ Could not get time for ${args.join(' ')}\n║\n╚═╝`
             }, { quoted: msg });
 
             const cityLabel = args.join(' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -139,7 +139,7 @@ module.exports = [
                     `║ 🕐 *Time*    : ${t.time}`,
                     `║ 📅 *Date*    : ${t.date}`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
@@ -168,7 +168,7 @@ module.exports = [
                     `║`,
                     `║ 💡 ${prefix}time <city> — any city`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
