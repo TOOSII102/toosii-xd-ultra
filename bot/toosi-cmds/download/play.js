@@ -31,7 +31,7 @@ module.exports = {
                     `║ ▸ *Usage*   : ${prefix}play <song name>`,
                     `║ ▸ *Example* : ${prefix}play Alan Walker Faded`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
@@ -78,7 +78,7 @@ module.exports = {
                 `║ ▸ *Quality* : ${quality}`,
                 `║ ▸ *Size*    : ${fmtSize(buf.length)}`,
                 `║`,
-                `╚═|〔 ${name} 〕`,
+                `╚═╝`,
             ].filter(Boolean).join('\n');
 
             await sock.sendMessage(chatId, {
@@ -96,7 +96,7 @@ module.exports = {
                     `║ ▸ *Status* : ❌ Failed`,
                     `║ ▸ *Reason* : ${e.message}`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
