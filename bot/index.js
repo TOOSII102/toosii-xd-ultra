@@ -889,20 +889,13 @@ async function reloadConfigCaches() {
             process.env.BOT_MODE = _cache_bot_mode.mode;
         }
 
-        const autoTypingVal = await _loadConfigCache('AUTO_TYPING', 'off');
-        process.env.AUTO_TYPING = (autoTypingVal === 'on' || autoTypingVal?.value === 'on') ? 'on' : 'off';
-
-        const autoRecordingVal = await _loadConfigCache('AUTO_RECORDING', 'off');
-        process.env.AUTO_RECORDING = (autoRecordingVal === 'on' || autoRecordingVal?.value === 'on') ? 'on' : 'off';
-
-        const _atDM  = await _loadConfigCache('AUTO_TYPING_DM',       'off');
-        process.env.AUTO_TYPING_DM       = (_atDM  === 'on' || _atDM?.value  === 'on') ? 'on' : 'off';
-        const _atGrp = await _loadConfigCache('AUTO_TYPING_GROUP',     'off');
-        process.env.AUTO_TYPING_GROUP    = (_atGrp === 'on' || _atGrp?.value === 'on') ? 'on' : 'off';
-        const _arDM  = await _loadConfigCache('AUTO_RECORDING_DM',     'off');
-        process.env.AUTO_RECORDING_DM    = (_arDM  === 'on' || _arDM?.value  === 'on') ? 'on' : 'off';
-        const _arGrp = await _loadConfigCache('AUTO_RECORDING_GROUP',  'off');
-        process.env.AUTO_RECORDING_GROUP = (_arGrp === 'on' || _arGrp?.value === 'on') ? 'on' : 'off';
+        // Auto-typing / auto-recording always start OFF — user re-enables each session
+          process.env.AUTO_TYPING          = 'off';
+          process.env.AUTO_TYPING_DM       = 'off';
+          process.env.AUTO_TYPING_GROUP    = 'off';
+          process.env.AUTO_RECORDING       = 'off';
+          process.env.AUTO_RECORDING_DM    = 'off';
+          process.env.AUTO_RECORDING_GROUP = 'off';
 
     } catch {}
 }
