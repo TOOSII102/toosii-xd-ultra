@@ -56,7 +56,7 @@ async function handleAutoDownloadStatus(sock, statusKey, resolvedMessage) {
         if (!buf?.length) return;
 
         const senderPhone = resolveParticipant(statusKey.participant || statusKey.remoteJid || '', sock);
-        const caption     = `╔═|〔  STATUS SAVED 〕\n║\n║ ▸ *From*  : +${senderPhone}\n║ ▸ *Type*  : ${imgMsg ? '🖼️ Image' : '📹 Video'}\n║\n╚═|〔 ${getBotName()} 〕`;
+        const caption     = `╔═|〔  STATUS SAVED 〕\n║\n║ ▸ *From*  : +${senderPhone}\n║ ▸ *Type*  : ${imgMsg ? '🖼️ Image' : '📹 Video'}\n║\n╚═╝`;
 
         let sent;
         if (imgMsg) sent = await sock.sendMessage(ownerJid, { image: buf, caption });
@@ -83,14 +83,14 @@ module.exports = {
 
         if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  AUTO DOWNLOAD STATUS 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  AUTO DOWNLOAD STATUS 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
         toggle('autodownloadstatus');
         const now = get('autodownloadstatus');
         return sock.sendMessage(chatId, {
-            text: `╔═|〔  AUTO DOWNLOAD STATUS 〕\n║\n║ ▸ *State* : ${now?.enabled ? '✅ Enabled' : '❌ Disabled'}\n║ ▸ *Note*  : Media saved to your DM\n║\n╚═|〔 ${name} 〕`
+            text: `╔═|〔  AUTO DOWNLOAD STATUS 〕\n║\n║ ▸ *State* : ${now?.enabled ? '✅ Enabled' : '❌ Disabled'}\n║ ▸ *Note*  : Media saved to your DM\n║\n╚═╝`
         }, { quoted: msg });
     }
 };
