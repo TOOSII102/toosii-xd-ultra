@@ -75,7 +75,7 @@ module.exports = [
                     `║`,
                     `║ ▸ No lying allowed! 😏`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n'),
                 mentions: [`${sender}@s.whatsapp.net`],
             }, { quoted: msg });
@@ -104,7 +104,7 @@ module.exports = [
                     `║`,
                     `║ ▸ No backing out now! 👀`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n'),
                 mentions: [`${sender}@s.whatsapp.net`],
             }, { quoted: msg });
@@ -132,7 +132,7 @@ module.exports = [
                         `║`,
                         `║ 🤔 *${pick(TRUTHS)}*`,
                         `║`,
-                        `╚═|〔 ${name} 〕`,
+                        `╚═╝`,
                     ].join('\n'),
                     mentions: [`${sender}@s.whatsapp.net`],
                 }, { quoted: msg });
@@ -146,7 +146,7 @@ module.exports = [
                         `║`,
                         `║ 🎯 *${pick(DARES)}*`,
                         `║`,
-                        `╚═|〔 ${name} 〕`,
+                        `╚═╝`,
                     ].join('\n'),
                     mentions: [`${sender}@s.whatsapp.net`],
                 }, { quoted: msg });
