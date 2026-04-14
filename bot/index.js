@@ -7740,7 +7740,7 @@ async function handleDefaultCommands(commandName, sock, msg, args, currentPrefix
                         `║ ▸ *Prefix*   : "${isPrefixless ? 'none' : currentPrefix}"`,
                         `║ ▸ *Mode*     : ${BOT_MODE}`,
                         `║ ▸ *Commands* : ${commands.size}`,
-                        `║ ▸ *Platform* : Replit`,
+                        `║ ▸ *Platform* : ${detectPlatform()}`,
                         `║ ▸ *Status*   : Online ✅`,
                         `║`,
                         `╚═|〔 ${_upName} 〕`,
@@ -8100,7 +8100,7 @@ async function main() {
         const herokuSessionId = process.env.SESSION_ID;
         
         if (isHeroku) {
-            UltraCleanLogger.info(`🏗️ Platform: Heroku`);
+            UltraCleanLogger.info(`🏗️ Platform: ${detectPlatform()}`);
             UltraCleanLogger.info(`📦 Dyno: ${process.env.DYNO || 'Unknown'}`);
             
             // Check if we have SESSION_ID from Heroku Config Vars
