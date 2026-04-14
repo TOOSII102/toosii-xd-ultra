@@ -179,7 +179,7 @@ async function antideleteHandleUpdate(update) {
             } catch { chatLabel = realChatId.split('@')[0]; }
         }
 
-        const header = `╔═|〔  ANTI DELETE 〕\n║\n║ ▸ *From* : ${senderDisplay}\n║ ▸ *Chat* : ${chatLabel}\n║\n╚═|〔 ${getBotName()} 〕`;
+        const header = `╔═|〔  ANTI DELETE 〕\n║\n║ ▸ *From* : ${senderDisplay}\n║ ▸ *Chat* : ${chatLabel}\n║\n╚═╝`;
 
         // Text
         const text = content?.conversation || content?.extendedTextMessage?.text
@@ -249,7 +249,7 @@ module.exports = {
 
         if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ANTI DELETE 〕\n║\n║ ▸ *Status* : ❌ Owner/sudo only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  ANTI DELETE 〕\n║\n║ ▸ *Status* : ❌ Owner/sudo only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -295,7 +295,7 @@ module.exports = {
                       `║   ${prefix}antidelete mode chat   → change mode this chat\n` +
                       `║   ${prefix}antidelete on all      → global on\n` +
                       `║   ${prefix}antidelete off all     → global off\n` +
-                      `║\n╚═|〔 ${name} 〕`
+                      `║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -307,7 +307,7 @@ module.exports = {
                 cfg.global = enable;
                 set('antidelete', cfg);
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  ANTI DELETE 〕\n║\n║ ▸ *Global* : ${enable ? '✅ Enabled for ALL chats' : '❌ Disabled globally'}\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  ANTI DELETE 〕\n║\n║ ▸ *Global* : ${enable ? '✅ Enabled for ALL chats' : '❌ Disabled globally'}\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
@@ -326,7 +326,7 @@ module.exports = {
                       `║ ▸ *${chatLbl}* : ${enable ? '✅ Enabled' : '❌ Disabled'}\n` +
                       (enable ? `║ ▸ *Mode*      : ${newCfg.mode}\n` : '') +
                       `║ ▸ *Global*    : ${cfg.global ? '✅ ON' : '❌ OFF'}\n` +
-                      `║\n╚═|〔 ${name} 〕`
+                      `║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -342,7 +342,7 @@ module.exports = {
                       `║ ▸ *Mode* : *${mode}* saved for this chat\n` +
                       `║ ▸ chat  = recover in same chat\n` +
                       `║ ▸ owner = forward to owner DM\n` +
-                      `║\n╚═|〔 ${name} 〕`
+                      `║\n╚═╝`
             }, { quoted: msg });
         }
 
