@@ -14,7 +14,7 @@ module.exports = {
 
         if (!q) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  NCS MUSIC 〕\n║\n║ ▸ *Usage*   : ${prefix}ncs <artist or title>\n║ ▸ *Example* : ${prefix}ncs alan walker\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  NCS MUSIC 〕\n║\n║ ▸ *Usage*   : ${prefix}ncs <artist or title>\n║ ▸ *Example* : ${prefix}ncs alan walker\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -28,12 +28,12 @@ module.exports = {
             let buf = await dlBuffer(dlUrl);
             buf     = await convertTo128kbps(buf);
 
-            const banner = `╔═|〔  NCS MUSIC 〕\n║\n║ ▸ *Track*   : ${title}\n║ ▸ *Quality* : 128kbps\n║ ▸ *Size*    : ${(buf.length/1024/1024).toFixed(2)} MB\n║\n╚═|〔 ${name} 〕`;
+            const banner = `╔═|〔  NCS MUSIC 〕\n║\n║ ▸ *Track*   : ${title}\n║ ▸ *Quality* : 128kbps\n║ ▸ *Size*    : ${(buf.length/1024/1024).toFixed(2)} MB\n║\n╚═╝`;
             await sock.sendMessage(chatId, { document: buf, mimetype: 'audio/mpeg', fileName: `${title}.mp3`, caption: banner }, { quoted: msg });
 
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  NCS MUSIC 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  NCS MUSIC 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
