@@ -14,7 +14,7 @@ module.exports = {
 
         if (!url) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  MEDIAFIRE 〕\n║\n║ ▸ *Usage* : ${prefix}mf <mediafire_url>\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  MEDIAFIRE 〕\n║\n║ ▸ *Usage* : ${prefix}mf <mediafire_url>\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -39,12 +39,12 @@ module.exports = {
                 fileSize = '';
             }
 
-            const banner = `╔═|〔  MEDIAFIRE 〕\n║\n║ ▸ *File* : ${fileName}\n║ ▸ *Size* : ${fileSize || (buf.length/1024/1024).toFixed(2)+' MB'}\n║\n╚═|〔 ${name} 〕`;
+            const banner = `╔═|〔  MEDIAFIRE 〕\n║\n║ ▸ *File* : ${fileName}\n║ ▸ *Size* : ${fileSize || (buf.length/1024/1024).toFixed(2)+' MB'}\n║\n╚═╝`;
             await sock.sendMessage(chatId, { document: buf, mimetype: 'application/octet-stream', fileName, caption: banner }, { quoted: msg });
 
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  MEDIAFIRE 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  MEDIAFIRE 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
