@@ -30,7 +30,7 @@ module.exports = {
         try { await sock.sendMessage(chatId, { react: { text: '⌨️', key: msg.key } }); } catch {}
         const botName = getBotName();
         const H = '╔═|〔  AUTO TYPING 〕';
-        const F = `╚═|〔 ${botName} 〕`;
+        const F = `╚═╝`;
 
         const sub  = (args[0] || '').toLowerCase().trim();   // on | off | dm | group
         const sub2 = (args[1] || '').toLowerCase().trim();   // on | off  (when sub is dm/group)
