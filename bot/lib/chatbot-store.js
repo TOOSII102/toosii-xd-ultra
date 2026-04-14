@@ -11,18 +11,23 @@ function save(d) {
     try { fs.mkdirSync(path.dirname(FILE), { recursive: true }); fs.writeFileSync(FILE, JSON.stringify(d, null, 2)); } catch {}
 }
 
-function isEnabled(chatId) { return load()[chatId]?.enabled === true; }
+// enabled: boolean  |  mode: 'all' | 'mention'
+function isEnabled(chatId)          { return load()[chatId]?.enabled === true; }
+function getMode(chatId)            { return load()[chatId]?.mode || 'all'; }
 
-function setEnabled(chatId, val) {
+function setEnabled(chatId, val, mode) {
     const d = load();
     if (!d[chatId]) d[chatId] = {};
     d[chatId].enabled = !!val;
+    if (mode) d[chatId].mode = mode;
     save(d);
 }
 
 function listEnabled() {
     const d = load();
-    return Object.keys(d).filter(k => d[k]?.enabled === true);
+    return Object.entries(d)
+        .filter(([, v]) => v?.enabled === true)
+        .map(([chatId, v]) => ({ chatId, mode: v.mode || 'all' }));
 }
 
-module.exports = { isEnabled, setEnabled, listEnabled };
+module.exports = { isEnabled, getMode, setEnabled, listEnabled };
