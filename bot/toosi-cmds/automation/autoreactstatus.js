@@ -72,7 +72,7 @@ module.exports = {
 
         if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═|〔 ${botName} 〕`
+                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -98,7 +98,7 @@ module.exports = {
                     `║   ${prefix}als emojis 🔥 ❤️ 😍 👍`,
                     `║   ${prefix}als reset`,
                     `║`,
-                    `╚═|〔 ${botName} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
@@ -114,7 +114,7 @@ module.exports = {
                     `║ ▸ *State* : ${now.enabled ? '✅ Enabled' : '❌ Disabled'}`,
                     `║ ▸ *Mode*  : ${now.mode === 'random' ? `🎲 Random (${now.emojis.join(' ')})` : `📌 Fixed → ${now.emoji}`}`,
                     `║`,
-                    `╚═|〔 ${botName} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         }
@@ -124,7 +124,7 @@ module.exports = {
             const chosen = args[1] || '❤️';
             saveCfg({ mode: 'fixed', emoji: chosen });
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Mode*  : 📌 Fixed\n║ ▸ *Emoji* : ${chosen}\n║\n╚═|〔 ${botName} 〕`
+                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Mode*  : 📌 Fixed\n║ ▸ *Emoji* : ${chosen}\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -133,7 +133,7 @@ module.exports = {
             saveCfg({ mode: 'random' });
             const now = getCfg();
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Mode*   : 🎲 Random\n║ ▸ *Emojis* : ${now.emojis.join(' ')}\n║\n╚═|〔 ${botName} 〕`
+                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Mode*   : 🎲 Random\n║ ▸ *Emojis* : ${now.emojis.join(' ')}\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -142,12 +142,12 @@ module.exports = {
             const list = args.slice(1).filter(Boolean);
             if (!list.length) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Usage* : ${prefix}als emojis 🔥 ❤️ 😍 👍\n║\n╚═|〔 ${botName} 〕`
+                    text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Usage* : ${prefix}als emojis 🔥 ❤️ 😍 👍\n║\n╚═╝`
                 }, { quoted: msg });
             }
             saveCfg({ emojis: list, mode: 'random' });
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Mode*   : 🎲 Random\n║ ▸ *Emojis* : ${list.join(' ')}\n║\n╚═|〔 ${botName} 〕`
+                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Mode*   : 🎲 Random\n║ ▸ *Emojis* : ${list.join(' ')}\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -155,7 +155,7 @@ module.exports = {
         if (sub === 'reset') {
             saveCfg({ mode: 'fixed', emoji: '❤️', emojis: [...DEFAULT_EMOJIS] });
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Reset* : ✅ Defaults restored\n║ ▸ *Mode*  : 📌 Fixed → ❤️\n║\n╚═|〔 ${botName} 〕`
+                text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *Reset* : ✅ Defaults restored\n║ ▸ *Mode*  : 📌 Fixed → ❤️\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -164,7 +164,7 @@ module.exports = {
         saveCfg({ enabled: !cfg.enabled });
         const now = getCfg();
         return sock.sendMessage(chatId, {
-            text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *State* : ${now.enabled ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═|〔 ${botName} 〕`
+            text: `╔═|〔  AUTO REACT STATUS 〕\n║\n║ ▸ *State* : ${now.enabled ? '✅ Enabled' : '❌ Disabled'}\n║\n╚═╝`
         }, { quoted: msg });
     }
 };
