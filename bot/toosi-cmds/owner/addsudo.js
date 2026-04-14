@@ -4,7 +4,7 @@ const { addSudo, mapLidToPhone, getSudoList } = require('../../lib/sudo-store');
 const { getBotName } = require('../../lib/botname');
 
 const H = '╔═|〔  ADD SUDO 〕';
-const F = () => `╚═|〔 ${getBotName()} 〕`;
+const F = () => `╚═╝`;
 
 function resolveRealNumber(jid, sock) {
     if (!jid) return null;
@@ -41,7 +41,7 @@ module.exports = {
 
         if (!ctx.isOwner()) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  ADD SUDO 〕\n║\n║ ▸ *Status* : ❌ Owner only command\n║\n╚═|〔 ${botName} 〕`
+                text: `╔═|〔  ADD SUDO 〕\n║\n║ ▸ *Status* : ❌ Owner only command\n║\n╚═╝`
             }, { quoted: msg });
         }
 
