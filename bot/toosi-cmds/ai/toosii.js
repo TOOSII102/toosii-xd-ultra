@@ -31,7 +31,7 @@ module.exports = {
 
         if (!prompt) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  🤖 TOOSII AI 〕\n║\n║ ▸ *Usage*   : ${prefix}ai <your question>\n║ ▸ *Example* : ${prefix}ai what is the meaning of life?\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🤖 TOOSII AI 〕\n║\n║ ▸ *Usage*   : ${prefix}ai <your question>\n║ ▸ *Example* : ${prefix}ai what is the meaning of life?\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -40,11 +40,11 @@ module.exports = {
             const reply = await pollinationsAI(prompt, 'openai');
             const fmtReply = reply.split('\n').map(l => `║ ${l}`).join('\n');
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🤖 TOOSII AI 〕\n║\n${fmtReply}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🤖 TOOSII AI 〕\n║\n${fmtReply}\n║\n╚═╝`
             }, { quoted: msg });
         } catch (e) {
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🤖 TOOSII AI 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🤖 TOOSII AI 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${e.message}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
