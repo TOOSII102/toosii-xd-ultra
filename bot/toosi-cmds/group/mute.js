@@ -16,7 +16,7 @@ module.exports = {
 
         if (!chatId.endsWith('@g.us')) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  🔇 MUTE 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🔇 MUTE 〕\n║\n║ ▸ *Status* : ❌ Group only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -43,7 +43,7 @@ module.exports = {
 
         if (!isPrivileged) {
             return sock.sendMessage(chatId, {
-                text: `╔═|〔  🔇 MUTE 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🔇 MUTE 〕\n║\n║ ▸ *Status* : ❌ Permission denied\n║ ▸ *Reason* : Sudo users and group admins only\n║\n╚═╝`
             }, { quoted: msg });
         }
 
@@ -59,7 +59,7 @@ module.exports = {
                     `║ ▸ *Status* : 🔇 Group muted`,
                     `║ ▸ *Effect* : Only admins can send messages`,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].join('\n')
             }, { quoted: msg });
         } catch (e) {
@@ -67,7 +67,7 @@ module.exports = {
                 ? 'Bot is not an admin — promote the bot first'
                 : e.message;
             await sock.sendMessage(chatId, {
-                text: `╔═|〔  🔇 MUTE 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${reason}\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  🔇 MUTE 〕\n║\n║ ▸ *Status* : ❌ Failed\n║ ▸ *Reason* : ${reason}\n║\n╚═╝`
             }, { quoted: msg });
         }
     }
