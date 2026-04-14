@@ -41,7 +41,7 @@ module.exports = [
 
             if (!query) {
                 return sock.sendMessage(chatId, {
-                    text: `╔═|〔  RECIPE 🍽️ 〕\n║\n║ ▸ *Usage*   : ${prefix}recipe <dish>\n║ ▸ *Example* : ${prefix}recipe jollof rice\n║ ▸ *Example* : ${prefix}recipe pasta\n║ ▸ Tip: ${prefix}mealsearch — browse by category\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  RECIPE 🍽️ 〕\n║\n║ ▸ *Usage*   : ${prefix}recipe <dish>\n║ ▸ *Example* : ${prefix}recipe jollof rice\n║ ▸ *Example* : ${prefix}recipe pasta\n║ ▸ Tip: ${prefix}mealsearch — browse by category\n║\n╚═╝`
                 }, { quoted: msg });
             }
 
@@ -73,7 +73,7 @@ module.exports = [
                     steps.length < instructions.split('\n').filter(Boolean).length ? `║ ▸ [recipe continues — see full online]` : null,
                     meal.strSource ? `║\n║ 🔗 ${meal.strSource}` : null,
                     `║`,
-                    `╚═|〔 ${name} 〕`,
+                    `╚═╝`,
                 ].filter(Boolean).join('\n');
 
                 if (meal.strMealThumb) {
@@ -87,7 +87,7 @@ module.exports = [
 
             } catch (e) {
                 await sock.sendMessage(chatId, {
-                    text: `╔═|〔  RECIPE 〕\n║\n║ ▸ *Status* : ❌ ${e.message}\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  RECIPE 〕\n║\n║ ▸ *Status* : ❌ ${e.message}\n║\n╚═╝`
                 }, { quoted: msg });
             }
         }
@@ -106,7 +106,7 @@ module.exports = [
             try { await sock.sendMessage(chatId, { react: { text: '🔍', key: msg.key } }); } catch {}
 
             if (!query) return sock.sendMessage(chatId, {
-                text: `╔═|〔  MEAL SEARCH 〕\n║\n║ ▸ *Usage* : ${prefix}mealsearch <dish>\n║\n╚═|〔 ${name} 〕`
+                text: `╔═|〔  MEAL SEARCH 〕\n║\n║ ▸ *Usage* : ${prefix}mealsearch <dish>\n║\n╚═╝`
             }, { quoted: msg });
 
             try {
@@ -118,12 +118,12 @@ module.exports = [
                 ).join('\n');
 
                 await sock.sendMessage(chatId, {
-                    text: `╔═|〔  MEAL SEARCH 🔍 〕\n║\n║ 🔍 *${query}* — ${meals.length} result${meals.length > 1 ? 's' : ''}\n║\n${list}\n║\n║ 💡 ${prefix}recipe <name> for full recipe\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  MEAL SEARCH 🔍 〕\n║\n║ 🔍 *${query}* — ${meals.length} result${meals.length > 1 ? 's' : ''}\n║\n${list}\n║\n║ 💡 ${prefix}recipe <name> for full recipe\n║\n╚═╝`
                 }, { quoted: msg });
 
             } catch (e) {
                 await sock.sendMessage(chatId, {
-                    text: `╔═|〔  MEAL SEARCH 〕\n║\n║ ▸ *Status* : ❌ ${e.message}\n║\n╚═|〔 ${name} 〕`
+                    text: `╔═|〔  MEAL SEARCH 〕\n║\n║ ▸ *Status* : ❌ ${e.message}\n║\n╚═╝`
                 }, { quoted: msg });
             }
         }
