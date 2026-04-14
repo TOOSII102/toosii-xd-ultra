@@ -61,6 +61,16 @@ function setupAntiGroupStatusListener(sock) {
     _sock = sock;
     if (_agsRegistered.has(sock)) return;
     _agsRegistered.add(sock);
+    // Reset all groups to OFF on every bot startup
+    try {
+        const cfg = loadCfg();
+        let changed = false;
+        for (const chatId of Object.keys(cfg)) {
+            if (cfg[chatId].enabled) { cfg[chatId].enabled = false; changed = true; }
+        }
+        if (changed) saveCfg(cfg);
+    } catch {}
+
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         for (const msg of messages) {

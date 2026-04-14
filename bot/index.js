@@ -4941,6 +4941,38 @@ async function startBot(loginMode = 'auto', loginData = null) {
                 }, 90 * 60 * 1000);
 
                 startHeartbeat(sock);
+                // ── Reset all per-group and global toggles to OFF on startup ──
+                (function resetAllTogglesOnStartup() {
+                    const dataFiles = [
+                        './data/antispam.json',
+                        './data/antistatusmention.json',
+                    ];
+                    for (const file of dataFiles) {
+                        try {
+                            const p = path.join(__dirname, file);
+                            if (!fs.existsSync(p)) continue;
+                            const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+                            let ch = false;
+                            for (const k of Object.keys(d)) {
+                                if (d[k]?.enabled) { d[k].enabled = false; ch = true; }
+                            }
+                            if (ch) fs.writeFileSync(p, JSON.stringify(d, null, 2));
+                        } catch {}
+                    }
+                    // Reset global autoconfig (antideletestatus, autoreactstatus, etc.)
+                    try {
+                        const p = path.join(__dirname, './data/autoconfig.json');
+                        if (fs.existsSync(p)) {
+                            const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+                            let ch = false;
+                            for (const k of Object.keys(d)) {
+                                if (d[k]?.enabled) { d[k].enabled = false; ch = true; }
+                            }
+                            if (ch) fs.writeFileSync(p, JSON.stringify(d, null, 2));
+                        }
+                    } catch {}
+                })();
+
                 setupAntiGroupStatusListener(sock);
                 setupAntiTagListener(sock);
                 setupAntiGroupMentionListener(sock);

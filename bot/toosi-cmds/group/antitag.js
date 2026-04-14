@@ -153,6 +153,16 @@ const _ataRegistered = new WeakSet();
 function setupAntiTagListener(sock) {
     if (_ataRegistered.has(sock)) return;
     _ataRegistered.add(sock);
+    // Reset all groups to OFF on every bot startup
+    try {
+        const cfg = loadCfg();
+        let changed = false;
+        for (const chatId of Object.keys(cfg)) {
+            if (cfg[chatId].enabled) { cfg[chatId].enabled = false; changed = true; }
+        }
+        if (changed) saveCfg(cfg);
+    } catch {}
+
 
     const startedAt = Math.floor(Date.now() / 1000); // unix seconds
 
