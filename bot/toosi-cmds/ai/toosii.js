@@ -129,7 +129,34 @@
                   let cmd;
                   switch (detected.intent) {
                       case 'play':    cmd = loadCmd('../download/play.js');     break;
-                      case 'youtube': cmd = loadCmd('../download/youtube.js');  break;
+                      case 'youtube': {
+                          // search first, then download video by URL
+                          try {
+                              const { casperGet, dlBuffer } = require('../../lib/keithapi');
+                              const vQuery = detected.args.join(' ').trim();
+                              await sock.sendMessage(chatId, { react: { text: '🎬', key: msg.key } });
+                              const search = await casperGet('/api/search/youtube', { query: vQuery });
+                              if (!search.success || !search.videos?.length) throw new Error('No results found for: ' + vQuery);
+                              const top  = search.videos[0];
+                              const dl   = await casperGet('/api/downloader/ytmp4', { url: top.url, quality: '720' })
+                                        || await casperGet('/api/downloader/ytvideo', { url: top.url });
+                              if (!dl?.success || !dl?.url) throw new Error('Video download failed');
+                              const buf  = await dlBuffer(dl.url);
+                              const banner = [
+                                  `╔═|〔  VIDEO 〕`, `║`,
+                                  `║ ▸ *Title*   : ${(top.title||vQuery).slice(0,38)}`,
+                                  top.channel  ? `║ ▸ *Channel* : ${top.channel.slice(0,30)}` : null,
+                                  top.duration ? `║ ▸ *Length*  : ${top.duration}` : null,
+                                  `║ ▸ *Size*    : ${(buf.length/1024/1024).toFixed(2)} MB`,
+                                  `║`, `╚═╝`
+                              ].filter(Boolean).join('\n');
+                              return await sock.sendMessage(chatId, { video: buf, caption: banner }, { quoted: msg });
+                          } catch (ve) {
+                              return await sock.sendMessage(chatId, {
+                                  text: `╔═|〔  VIDEO 〕\n║\n║ ▸ ❌ ${ve.message}\n║\n╚═╝`
+                              }, { quoted: msg });
+                          }
+                      }
                       case 'weather': cmd = loadCmd('../utility/weather.js');   break;
                       case 'crypto':  cmd = loadCmd('../utility/crypto.js');    break;
                       case 'translate': cmd = loadCmd('../utility/translate.js'); break;
