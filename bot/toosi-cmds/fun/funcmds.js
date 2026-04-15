@@ -216,7 +216,7 @@ const quizCmd = {
 // ── Quote (ZenQuotes) ─────────────────────────────────────────────────────────
 
 const quoteCmd = {
-    name: 'quote', aliases: ['randomquote', 'inspire', 'motivation', 'qod'],
+    name: 'zenquote', aliases: ['randomquote', 'zenq', 'qod'],
     description: 'Get a random inspirational quote',
     category: 'fun',
     async execute(sock, msg) {
