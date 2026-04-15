@@ -70,13 +70,6 @@
               if (t.count > (gcfg.limit || 1)) {
                   registerBotDelete(msg.key.id);
                   try { await sock.sendMessage(chatId, { delete: msg.key }); } catch {}
-                  // Warn once per window to avoid spam
-                  if (t.count === (gcfg.limit || 1) + 1) {
-                      await sock.sendMessage(chatId, {
-                          text: `╔═|〔  SLOW MODE 〕\n║\n║ ▸ @${senderNum} slow down!\n║ ▸ Max ${gcfg.limit} msg / ${gcfg.window}s\n║\n╚═╝`,
-                          mentions: [`${senderNum}@s.whatsapp.net`]
-                      }).catch(() => {});
-                  }
               }
           }
       });
