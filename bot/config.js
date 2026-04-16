@@ -10,7 +10,7 @@
         OWNER_NUMBER:     process.env.OWNER_NUMBER     || '',
 
         // ── Bot settings ────────────────────────────────────────────
-        PREFIX:           process.env.PREFIX           || ',',
+        PREFIX:           process.env.PREFIX           || '.',
         BOT_NAME:         process.env.BOT_NAME         || 'TOOSII-XD ULTRA',
         OWNER_NAME:       process.env.OWNER_NAME       || 'TOOSII',
         MODE:             process.env.MODE             || 'public',
