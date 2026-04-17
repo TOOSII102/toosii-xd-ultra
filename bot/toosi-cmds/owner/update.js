@@ -187,7 +187,7 @@
               // Node.js copy — rsync not available on all panels
               (function copyDir(src, dst) {
                   const nodePath = require('path'), nodefs = require('fs');
-                  const SKIP = new Set(['session', '.env', 'node_modules', '.git']);
+                  const SKIP = new Set(['session', 'session_backup', 'data', '.env', 'node_modules', '.git']);
                   nodefs.mkdirSync(dst, { recursive: true });
                   for (const item of nodefs.readdirSync(src)) {
                       if (SKIP.has(item)) continue;

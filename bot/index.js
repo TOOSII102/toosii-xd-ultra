@@ -6422,10 +6422,10 @@ async function startBot(loginMode = 'auto', loginData = null) {
     } catch (error) {
         UltraCleanLogger.error(`❌ Connection failed: ${error.message}`);
         
-        if (error.message.includes('auth') || error.message.includes('session')) {
-            UltraCleanLogger.warning('🔄 Session issue detected, cleaning session and retrying...');
-            cleanSession();
-        }
+        // Removed auto-cleanSession: generic 'auth'/'session' text matches caused
+          // session wipes after .update restarts. Real logout/403 is handled in
+          // handleConnectionCloseSilently with proper DisconnectReason codes.
+          UltraCleanLogger.warning('⚠️ Connection error — will retry without wiping session.');
         
         setTimeout(async () => {
             UltraCleanLogger.info('🔄 Retrying connection...');
