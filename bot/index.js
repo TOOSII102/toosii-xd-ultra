@@ -6012,7 +6012,7 @@ async function startBot(loginMode = 'auto', loginData = null) {
                 if (revokedMsgId) {
                     const revokedChatJid = upsertProtoMsg.key?.remoteJid || msg.key?.remoteJid;
                     if (msg.key?.remoteJid === 'status@broadcast' || revokedChatJid === 'status@broadcast') {
-                        console.log(`[STATUS-AD] Protocol revoke detected via upsert for ${revokedMsgId}`);
+                        // [STATUS-AD] revoke — handled silently
                         statusAntideleteHandleUpdate({
                             key: { ...msg.key, id: revokedMsgId },
                             update: { message: null, messageStubType: 1 }
@@ -6020,7 +6020,7 @@ async function startBot(loginMode = 'auto', loginData = null) {
                             originalConsoleMethods.log(`❌ [STATUS-AD] Revoke handle error: ${err.message}`);
                         });
                     } else {
-                        console.log(`[ANTIDELETE] Protocol revoke detected via upsert for ${revokedMsgId} in ${revokedChatJid}`);
+                        // [ANTIDELETE] revoke — handled silently
                         antideleteHandleUpdate({
                             key: { ...msg.key, id: revokedMsgId, remoteJid: revokedChatJid },
                             update: { message: null, messageStubType: 1 }
