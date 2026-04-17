@@ -16,31 +16,36 @@
     const PLATFORM_ICON = IS_HEROKU ? '☁️'     : IS_PANEL ? '🖥️'   : '💻';
 
     // ── Session backup helpers ────────────────────────────────────────────────
-    const SESSION_DIR  = './session';
-    const CREDS_FILE   = path.join(SESSION_DIR, 'creds.json');
-    const BACKUP_DIR   = './data';
-    const BACKUP_CREDS = path.join(BACKUP_DIR, 'session_creds_backup.json');
+    const SESSION_DIR    = './session';
+    const CREDS_FILE     = path.join(SESSION_DIR, 'creds.json');
+    // Two backup locations: session/ (gitignored = safest) + data/ (redundant)
+    const BACKUP_PRIMARY = path.join(SESSION_DIR, 'creds_backup.json');
+    const BACKUP_DATA    = path.join('./data', 'session_creds_backup.json');
 
     function backupSession() {
         try {
-            if (fs.existsSync(CREDS_FILE)) {
-                if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
-                fs.copyFileSync(CREDS_FILE, BACKUP_CREDS);
-                return true;
-            }
-        } catch {}
-        return false;
+            if (!fs.existsSync(CREDS_FILE)) return false;
+            // Primary: inside session/ dir (gitignored — survives git clean -fd)
+            fs.copyFileSync(CREDS_FILE, BACKUP_PRIMARY);
+            // Secondary: data/ dir (redundant)
+            try {
+                if (!fs.existsSync('./data')) fs.mkdirSync('./data', { recursive: true });
+                fs.copyFileSync(CREDS_FILE, BACKUP_DATA);
+            } catch {}
+            return true;
+        } catch { return false; }
     }
 
     function restoreSession() {
         try {
-            if (fs.existsSync(BACKUP_CREDS)) {
-                if (!fs.existsSync(SESSION_DIR)) fs.mkdirSync(SESSION_DIR, { recursive: true });
-                fs.copyFileSync(BACKUP_CREDS, CREDS_FILE);
-                return true;
-            }
-        } catch {}
-        return false;
+            // Try primary backup first (inside gitignored session/ dir)
+            const src = fs.existsSync(BACKUP_PRIMARY) ? BACKUP_PRIMARY
+                      : fs.existsSync(BACKUP_DATA) ? BACKUP_DATA : null;
+            if (!src) return false;
+            if (!fs.existsSync(SESSION_DIR)) fs.mkdirSync(SESSION_DIR, { recursive: true });
+            fs.copyFileSync(src, CREDS_FILE);
+            return true;
+        } catch { return false; }
     }
 
     function run(cmd, opts = {}) {
@@ -58,7 +63,6 @@
             const token   = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
             const headers = { 'User-Agent': 'toosii-xd-bot', 'Accept': 'application/vnd.github.v3+json' };
             if (token) headers['Authorization'] = 'token ' + token;
-
             const url = `https://api.github.com/repos/${REPO}/commits/${BRANCH}`;
             https.get(url, { headers }, res => {
                 let body = '';
@@ -133,7 +137,7 @@
 
             const latestShort = latest.sha?.slice(0, 7) || 'unknown';
 
-            // ── Heroku: show manual redeploy instructions ─────────────────────
+            // ── Heroku ────────────────────────────────────────────────────────
             if (IS_HEROKU) {
                 return sock.sendMessage(jid, { text: [
                     header, '║',
@@ -141,19 +145,14 @@
                     '║  ▸ *Status*   : ℹ️ Heroku detected',
                     '║',
                     '║  Heroku auto-deploys from GitHub.',
-                    '║  To update, push new code to GitHub',
-                    '║  and Heroku will redeploy automatically.',
+                    '║  Push new code and Heroku will redeploy.',
                     '║',
-                    '║  ▸ *Latest commit* : ' + latestShort,
-                    '║  ▸ *Message*       : ' + latest.message,
-                    '║',
-                    '║  Or trigger manually in Heroku dashboard:',
-                    '║  Deploy → Manual deploy → Deploy branch',
+                    '║  ▸ *Latest* : ' + latestShort + ' — ' + latest.message,
                     '║', footer
                 ].join('\n') }, { quoted: msg });
             }
 
-            // ── Backup session before ANYTHING else ──────────────────────────
+            // ── Step 1: Backup session BEFORE any file changes ────────────────
             const sessionBacked = backupSession();
 
             // ── Git-based update ──────────────────────────────────────────────
@@ -188,10 +187,10 @@
                     ].join('\n') }, { quoted: msg });
                 }
 
-                // Restore session immediately after git reset (before npm or exit)
-                restoreSession();
-
                 try { run('npm install --omit=dev --no-audit', { cwd: process.cwd() }); } catch { npmFailed = true; }
+
+                // ── Step 2: Restore session AFTER npm install, BEFORE exit ────
+                restoreSession();
 
                 await sock.sendMessage(jid, { text: [
                     header, '║',
@@ -201,7 +200,7 @@
                     '║  ▸ *To*       : ' + latestShort,
                     '║  ▸ *Message*  : ' + latest.message,
                     '║  ▸ *Deps*     : ' + (npmFailed ? '⚠️ npm had warnings' : '✅ OK'),
-                    '║  ▸ *Session*  : ' + (sessionBacked ? '✅ Protected' : '⚠️ No session to protect'),
+                    '║  ▸ *Session*  : ' + (sessionBacked ? '✅ Protected' : '⚠️ No session found'),
                     '║', footer
                 ].join('\n') }, { quoted: msg });
 
@@ -219,7 +218,6 @@
                 await downloadFile(tarUrl, tarPath);
                 run(`rm -rf ${tmpDir} && mkdir -p ${tmpDir}`);
                 run(`tar xzf ${tarPath} -C ${tmpDir} --strip-components=1`);
-                // Node.js copy — rsync not available on all panels
                 (function copyDir(src, dst) {
                     const nodePath = require('path'), nodefs = require('fs');
                     const SKIP = new Set(['session', 'session_backup', 'data', '.env', 'node_modules', '.git']);
@@ -231,10 +229,10 @@
                         else nodefs.copyFileSync(s, d);
                     }
                 })(tmpDir, process.cwd());
-                // Restore session immediately after file copy (extra safety)
-                restoreSession();
                 run('npm install --omit=dev --no-audit', { cwd: process.cwd() });
                 run(`rm -rf ${tarPath} ${tmpDir}`);
+                // ── Step 2: Restore session AFTER npm install, BEFORE exit ────
+                restoreSession();
             } catch (e) { dlErr = e.message?.slice(0, 120); }
 
             if (dlErr) {
@@ -253,7 +251,7 @@
                 '║  ▸ *Platform* : ' + PLATFORM_ICON + ' ' + PLATFORM,
                 '║  ▸ *To*       : ' + latestShort,
                 '║  ▸ *Message*  : ' + latest.message,
-                '║  ▸ *Session*  : ' + (sessionBacked ? '✅ Protected' : '⚠️ No session to protect'),
+                '║  ▸ *Session*  : ' + (sessionBacked ? '✅ Protected' : '⚠️ No session found'),
                 '║', footer
             ].join('\n') }, { quoted: msg });
 
