@@ -5646,6 +5646,7 @@ async function startBot(loginMode = 'auto', loginData = null) {
             }
             const msg = messages[0];
             if (!msg) return;
+            msg._botReceivedAt = Date.now();
 
             // ── Dedup: skip LID ghost-copies of the same message ──────────────
             const _msgDedupId = msg.key?.id;
