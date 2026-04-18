@@ -25,6 +25,16 @@ bot/tmp/
 .replit
 replit.nix
 .breakpoints
+.local/
+.agents/
+.cache/
+.upm/
+attached_assets/
+artifacts/
+lib/
+scripts/
+toosii-bot/
+replit.md
 
 # ── Binary downloads (auto-fetched on startup) ────────────────────────────────
 bot/yt-dlp
