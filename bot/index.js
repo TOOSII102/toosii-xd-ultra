@@ -1281,6 +1281,7 @@ function savePrefixToFile(newPrefix) {
         const config = {
             prefix: isNone ? '' : newPrefix,
             isPrefixless: isNone,
+            userSet: true,
             setAt: new Date().toISOString(),
             timestamp: Date.now(),
             version: VERSION,
@@ -1313,38 +1314,52 @@ function savePrefixToFile(newPrefix) {
 
 function loadPrefixFromFiles() {
     try {
+        // ENV VAR TAKES PRIORITY — critical for Heroku/Railway/Koyeb deployers.
+        // The PREFIX or BOT_PREFIX env var always wins unless the user explicitly
+        // changed prefix at runtime via the setprefix command (userSet flag).
+        const _rawEnv = process.env.BOT_PREFIX || process.env.PREFIX || '';
+        const _envPrefix = (_rawEnv && _rawEnv.trim().length > 0 && _rawEnv.trim().length <= 5)
+            ? _rawEnv.trim() : '';
+
         if (_cache_prefix_config) {
             const config = _cache_prefix_config;
-            
+
             if (config.isPrefixless !== undefined) {
                 isPrefixless = config.isPrefixless;
             }
-            
+
             if (config.prefix !== undefined) {
                 if (config.prefix.trim() === '' && config.isPrefixless) {
                     return '';
                 } else if (config.prefix.trim() !== '') {
+                    // If prefix was saved by the user via setprefix, honour it.
+                    // Otherwise let the env var win (clean Heroku deployments).
+                    if (config.userSet) return config.prefix.trim();
+                    if (_envPrefix) return _envPrefix;
                     return config.prefix.trim();
                 }
             }
         }
-        
+
+        // No saved config — use env var or DEFAULT_PREFIX
+        if (_envPrefix) return _envPrefix;
+
         if (_cache_bot_settings) {
             const settings = _cache_bot_settings;
-            
+
             if (settings.isPrefixless !== undefined) {
                 isPrefixless = settings.isPrefixless;
             }
-            
+
             if (settings.prefix && settings.prefix.trim() !== '') {
                 return settings.prefix.trim();
             }
         }
-        
+
     } catch (error) {
         UltraCleanLogger.warning(`Error loading prefix: ${error.message}`);
     }
-    
+
     return DEFAULT_PREFIX;
 }
 
@@ -4501,7 +4516,7 @@ async function runDataMigrations() {
         }
 
         _cache_owner_data = await _loadConfigCache('owner_data', {});
-        _cache_prefix_config = await _loadConfigCache('prefix_config', { prefix: '.' });
+        _cache_prefix_config = await _loadConfigCache('prefix_config', { prefix: DEFAULT_PREFIX });
         _cache_bot_settings = await _loadConfigCache('bot_settings', {});
         _cache_bot_mode = await _loadConfigCache('bot_mode', null);
         if (!_cache_bot_mode || !_cache_bot_mode.mode) {

@@ -1,7 +1,34 @@
 {
+  "bot_mode": {
+    "mode": "public"
+  },
+  "MODE": "public",
+  "AUTO_TYPING": "off",
+  "AUTO_TYPING_DM": "off",
+  "AUTO_TYPING_GROUP": "off",
+  "AUTO_RECORDING": "off",
+  "AUTO_RECORDING_DM": "off",
+  "AUTO_RECORDING_GROUP": "off",
+  "antiviewonce_config": {
+    "mode": "private",
+    "ownerJid": "254706441840@s.whatsapp.net",
+    "updatedAt": "2026-04-11T10:00:00.000Z"
+  },
+  "botId": "254746677793:92@s.whatsapp.net",
+  "owner_data": {
+    "OWNER_JID": "254746677793:92@s.whatsapp.net",
+    "OWNER_NUMBER": "254746677793",
+    "OWNER_CLEAN_JID": "254746677793@s.whatsapp.net",
+    "OWNER_CLEAN_NUMBER": "254746677793",
+    "ownerLID": null,
+    "linkedAt": "2026-04-18T08:38:04.759Z",
+    "autoLinked": false,
+    "previousOwnerCleared": true,
+    "version": "1.2.0"
+  },
   "status_detection_logs": {
     "logs": [],
-    "updatedAt": "2026-04-13T01:44:59.619Z",
+    "updatedAt": "2026-04-18T08:37:12.516Z",
     "count": 0
   },
   "member_detection": {
@@ -867,59 +894,26 @@
         }
       ]
     },
-    "updatedAt": "2026-04-13T17:55:23.843Z",
+    "updatedAt": "2026-04-18T08:37:12.516Z",
     "totalGroups": 7
   },
-  "owner_data": {
-    "OWNER_JID": "254706441840:17@s.whatsapp.net",
-    "OWNER_NUMBER": "254706441840",
-    "OWNER_CLEAN_JID": "254706441840@s.whatsapp.net",
-    "OWNER_CLEAN_NUMBER": "254706441840",
-    "ownerLID": null,
-    "linkedAt": "2026-04-13T17:54:24.930Z",
-    "autoLinked": false,
-    "previousOwnerCleared": true,
-    "version": "1.1.6"
+  "antiviewonce_history": {
+    "messages": [],
+    "updatedAt": "2026-04-18T08:37:12.516Z",
+    "total": 0,
+    "mode": "public"
   },
   "auto_follow_state": {
     "followedChannels": [
-      "120363425472822304@newsletter",
-      "120363423201875450@newsletter",
-      "120363419521878542@newsletter",
-      "120363424051543691@newsletter",
-      "120363400000506333@newsletter",
+      "120363426705024581@newsletter",
       "120363426409647211@newsletter",
       "120363424557809232@newsletter",
-      "120363426705024581@newsletter"
+      "120363419521878542@newsletter",
+      "120363423201875450@newsletter",
+      "120363405182019728@newsletter"
     ],
     "joinedGroups": [
       "HjFc3pud3IA0R0WGr1V2Xu"
     ]
-  },
-  "antilink_config": {
-    "120363408070773199@g.us": {
-      "enabled": false,
-      "mode": "delete",
-      "exemptAdmins": true
-    }
-  },
-  "antiviewonce_config": {
-    "mode": "public",
-    "ownerJid": "254706441840@s.whatsapp.net",
-    "updatedAt": "2026-04-11T14:31:50.389Z"
-  },
-  "MODE": "public",
-  "bot_mode": {
-    "mode": "public"
-  },
-  "antiviewonce_history": {
-    "messages": [],
-    "updatedAt": "2026-04-13T01:44:59.631Z",
-    "total": 0,
-    "mode": "public"
-  },
-  "AUTO_TYPING": "off",
-  "AUTO_RECORDING": "off",
-  "AUTO_RECORDING_DM": "off",
-  "AUTO_RECORDING_GROUP": "off"
+  }
 }
