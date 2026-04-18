@@ -152,8 +152,8 @@ function _lookupName(jid, resolvedDisplay) {
  * Check if the message sender is privileged (owner, sudo, or group admin).
  *
  * Handles all JID formats:
- *   - Phone JIDs with device suffix  (254706441840:5@s.whatsapp.net)
- *   - Phone JIDs without device suffix (254706441840@s.whatsapp.net)
+ *   - Phone JIDs with device suffix  (2547XXXXXXXXX:5@s.whatsapp.net)
+ *   - Phone JIDs without device suffix (2547XXXXXXXXX@s.whatsapp.net)
  *   - LID-based JIDs (12345678901@lid)
  *
  * NOTE: Bot admin status is intentionally NOT checked here — participant lookups
@@ -166,9 +166,9 @@ async function checkPrivilege(sock, chatId, msg, ctx) {
     if (ctx?.isOwnerUser || ctx?.isSudoUser) return { ok: true };
 
     const rawJid  = msg.key.participant || msg.key.remoteJid || '';
-    // Bare JID = strip device suffix, keep domain  e.g. "254706441840@s.whatsapp.net"
+    // Bare JID = strip device suffix, keep domain  e.g. "2547XXXXXXXXX@s.whatsapp.net"
     const bareJid = rawJid.replace(/:[\d]+@/, '@');
-    // Numeric part only  e.g. "254706441840"
+    // Numeric part only  e.g. "2547XXXXXXXXX"
     const numPart = rawJid.split('@')[0].split(':')[0];
 
     const rawDomain = rawJid.split('@')[1] || '';   // e.g. "s.whatsapp.net" or "lid"
