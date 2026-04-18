@@ -5646,6 +5646,7 @@ async function startBot(loginMode = 'auto', loginData = null) {
                               // Allow prefix commands to fall through — only drop plain non-command text
                               const _appendTxt = m0.message?.conversation || m0.message?.extendedTextMessage?.text || '';
                               const _appendPfx = (typeof getCurrentPrefix === 'function') ? getCurrentPrefix() : '';
+                              originalConsoleMethods.log(`🔍 [APPEND-CHECK] txt="${_appendTxt.trim().substring(0,20)}" pfx="${_appendPfx}" match=${_appendTxt.trim().startsWith(_appendPfx)}`);
                               if (!_appendTxt.trim() || !_appendPfx || !_appendTxt.trim().startsWith(_appendPfx)) {
                                   return;
                               }
@@ -6083,6 +6084,7 @@ async function startBot(loginMode = 'auto', loginData = null) {
 
             lastActivityTime = Date.now();
             
+            originalConsoleMethods.log(`✅ [DISPATCH] fromMe=${msg.key?.fromMe} jid=${(msg.key?.remoteJid||'?').split('@')[0]} ts=${msg._botReceivedAt}`);
             handleIncomingMessage(sock, msg).catch(e => {
                 if (e?.message && !e.message.includes('closed') && !e.message.includes('Stream') && !e.message.includes('timed out')) {
                     originalConsoleMethods.log(`❌ [Handler] ${e.message}`);
