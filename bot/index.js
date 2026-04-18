@@ -4025,6 +4025,9 @@ class MessageStore {
 
 const commands = new Map();
 const commandCategories = new Map();
+// Expose globally so menu.js can use the authoritative loaded registry
+globalThis._botCommandCategories = commandCategories;
+globalThis._botCommandsMap = commands;
 
 async function loadCommandsFromFolder(folderPath, category = 'general') {
     const absolutePath = path.resolve(folderPath);
