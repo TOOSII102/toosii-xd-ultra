@@ -5540,6 +5540,7 @@ async function startBot(loginMode = 'auto', loginData = null) {
         globalThis._ciphertextBlacklist_ref = _ciphertextBlacklist;
 
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
+            originalConsoleMethods.log(`📨 [RECV] type=${type} count=${messages?.length} fromMe=${messages?.[0]?.key?.fromMe} jid=${(messages?.[0]?.key?.remoteJid||'?').split('@')[0]}`);
             // TRACE: log ALL view-once arrivals (no fromMe filter) to show exact delivery type
             try {
                 const _t0 = messages?.[0];
