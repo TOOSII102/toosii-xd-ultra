@@ -127,9 +127,6 @@ module.exports = {
             `║  ▸ ■  *RAM*       :  ${getRamBar()}`,
             `║  ▸ ■  *Time*      :  ${getCurrentTime()}`,
             `║`,
-            `║  👨‍💻  *Creator*   »  @toosiitech`,
-            `║  📢  *Channel*   »  https://whatsapp.com/channel/0029VbCGMJeEquiVSIthcK03`,
-            `║`,
         ];
 
         for (const { cat, cmdNames } of catData) {
@@ -140,6 +137,9 @@ module.exports = {
             }
         }
 
+        lines.push(`║`);
+        lines.push(`║  👨‍💻  *Creator*      »  @toosiitech`);
+        lines.push(`║  📢  *View Channel*  »  https://whatsapp.com/channel/0029VbCGMJeEquiVSIthcK03`);
         lines.push(`║`);
         lines.push(`╚═╝`);
 
