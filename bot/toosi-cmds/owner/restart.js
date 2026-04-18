@@ -1,1 +1,36 @@
-'use strict';function _0x52bc(_0x52ed51,_0x335790){_0x52ed51=_0x52ed51-0x7d;const _0x3b4d24=_0x3b4d();let _0x52bcdb=_0x3b4d24[_0x52ed51];if(_0x52bc['hnQVWK']===undefined){var _0x2f9555=function(_0x3f29ed){const _0x5e60e4='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x3220b2='',_0x31c4ed='';for(let _0x3772aa=0x0,_0x3c3f52,_0x4ce436,_0x1f9e0f=0x0;_0x4ce436=_0x3f29ed['charAt'](_0x1f9e0f++);~_0x4ce436&&(_0x3c3f52=_0x3772aa%0x4?_0x3c3f52*0x40+_0x4ce436:_0x4ce436,_0x3772aa++%0x4)?_0x3220b2+=String['fromCharCode'](0xff&_0x3c3f52>>(-0x2*_0x3772aa&0x6)):0x0){_0x4ce436=_0x5e60e4['indexOf'](_0x4ce436);}for(let _0x20821f=0x0,_0x18ae48=_0x3220b2['length'];_0x20821f<_0x18ae48;_0x20821f++){_0x31c4ed+='%'+('00'+_0x3220b2['charCodeAt'](_0x20821f)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x31c4ed);};_0x52bc['PZTZtd']=_0x2f9555,_0x52bc['KoRxhJ']={},_0x52bc['hnQVWK']=!![];}const _0x5ea3aa=_0x3b4d24[0x0],_0x3c0aca=_0x52ed51+_0x5ea3aa,_0x5ba7ee=_0x52bc['KoRxhJ'][_0x3c0aca];return!_0x5ba7ee?(_0x52bcdb=_0x52bc['PZTZtd'](_0x52bcdb),_0x52bc['KoRxhJ'][_0x3c0aca]=_0x52bcdb):_0x52bcdb=_0x5ba7ee,_0x52bcdb;}const _0x3283d0=_0x52bc;(function(_0x11f5b8,_0x59ef19){const _0x4c7aa0={_0x4ad7bd:0x84,_0x17b276:0x81,_0x3b75a6:0x7e,_0x5aa571:0x94},_0x10426f=_0x52bc,_0x12e8f9=_0x11f5b8();while(!![]){try{const _0x15afed=-parseInt(_0x10426f(0x85))/0x1*(-parseInt(_0x10426f(_0x4c7aa0._0x4ad7bd))/0x2)+-parseInt(_0x10426f(0x97))/0x3+-parseInt(_0x10426f(_0x4c7aa0._0x17b276))/0x4*(parseInt(_0x10426f(0x83))/0x5)+-parseInt(_0x10426f(0x96))/0x6*(-parseInt(_0x10426f(0x7f))/0x7)+parseInt(_0x10426f(_0x4c7aa0._0x3b75a6))/0x8+parseInt(_0x10426f(0x7d))/0x9+-parseInt(_0x10426f(_0x4c7aa0._0x5aa571))/0xa;if(_0x15afed===_0x59ef19)break;else _0x12e8f9['push'](_0x12e8f9['shift']());}catch(_0x21f1da){_0x12e8f9['push'](_0x12e8f9['shift']());}}}(_0x3b4d,0x45038));function _0x3b4d(){const _0x58fe90=['uMvZDgfYDca','CMvSB2fKyM8','CMvIB290','DgHLigjVDca','4Pwu4PwqFooaLcaGuKu','8j+uHcbszxn0yxi','ywDL','nJKYmtC0mejqyLjctq','AxnpD25LCG','mtK5nJjAsNjYqNq','nteWotyZrK1Jtwro','ChjVy2vZCW','mZq1mtuWmfLSz1n4Dq','mZG0odu4ngD4u0z3yq','mte5rezcuu1O','zxiGB25SEqO','ntGWuvDgtu1N','4PwricdILRGGkLn0','mtaXndvMrwvLyK4','mtaZnJq5nKXYB2ruEa','muLrD3DJvG','C2vUze1LC3m','4PwrcUkvKsaGt3DU','lI4VlI4VBgK','CMvZDgfYDa','u1rbuLqG44cv','yI9IB3rUyw0','yxr1CYOGoIa'];_0x3b4d=function(){return _0x58fe90;};return _0x3b4d();}const {getBotName}=require(_0x3283d0(0x88)+_0x3283d0(0x8b)+'e');module['exports']={'name':_0x3283d0(0x89),'aliases':[_0x3283d0(0x8f),_0x3283d0(0x8e)+'t'],'description':_0x3283d0(0x8d)+_0x3283d0(0x90)+_0x3283d0(0x98),'category':'owner','ownerOnly':!![],async 'execute'(_0x3220b2,_0x31c4ed,_0x3772aa,_0x3c3f52,_0x4ce436){const _0x185744={_0x2bae04:0x95,_0x5f5db3:0x93,_0x5ef2ce:0x87,_0x195580:0x86,_0x122135:0x8c,_0x12f80e:0x92},_0x436065=_0x3283d0,_0x1f9e0f=_0x31c4ed['key']['remoteJi'+'d'],_0x20821f=getBotName(),_0x18ae48='╚═|〔\x20'+_0x20821f+'\x20〕';if(!_0x4ce436?.[_0x436065(_0x185744._0x2bae04)]&&!_0x4ce436?.['isSudo'])return _0x3220b2['sendMess'+_0x436065(_0x185744._0x5f5db3)](_0x1f9e0f,{'text':'╔═|〔\x20\x20RE'+'START\x20〕\x0a'+_0x436065(_0x185744._0x5ef2ce)+_0x436065(0x80)+'║\x0a'+_0x18ae48},{'quoted':_0x31c4ed});try{await _0x3220b2['sendMess'+_0x436065(0x93)](_0x1f9e0f,{'react':{'text':'🔄','key':_0x31c4ed['key']}});}catch{}await _0x3220b2[_0x436065(_0x185744._0x195580)+_0x436065(0x93)](_0x1f9e0f,{'text':[_0x436065(0x91)+_0x436065(0x8a),'║',_0x436065(0x82)+_0x436065(_0x185744._0x122135)+_0x436065(_0x185744._0x12f80e)+'ting...','║',_0x18ae48]['join']('\x0a')},{'quoted':_0x31c4ed}),setTimeout(()=>process['exit'](0x1),0x7d0);}};
+'use strict';
+const { getBotName } = require('../../lib/botname');
+
+module.exports = {
+    name:        'restart',
+    aliases:     ['reboot', 'reloadbot'],
+    description: 'Restart the bot',
+    category:    'owner',
+    ownerOnly:   true,
+
+    async execute(sock, msg, args, prefix, ctx) {
+        const chatId  = msg.key.remoteJid;
+
+        if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
+            const botName = getBotName();
+            return await sock.sendMessage(chatId, {
+                text: `╔═|〔  RESTART 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n╚═|〔 ${botName} 〕`
+            }, { quoted: msg });
+        }
+
+        try { await sock.sendMessage(chatId, { react: { text: '🔄', key: msg.key } }); } catch {}
+
+        const botName = getBotName();
+        await sock.sendMessage(chatId, {
+            text: [
+                `╔═|〔  RESTART 〕`,
+                `║`,
+                `║ ▸ *Status* : 🔄 Restarting now...`,
+                `║`,
+                `╚═|〔 ${botName} 〕`,
+            ].join('\n')
+        }, { quoted: msg });
+
+        setTimeout(() => process.exit(1), 2000);
+    },
+};
