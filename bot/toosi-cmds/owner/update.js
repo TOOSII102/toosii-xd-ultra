@@ -1,261 +1,148 @@
-'use strict';
-    const { execSync } = require('child_process');
-    const https = require('https');
-    const http  = require('http');
-    const fs    = require('fs');
-    const path  = require('path');
-    const { getBotName } = require('../../lib/botname');
+const { execSync } = require('child_process');
+const https = require('https');
+const { getBotName } = require('../../lib/botname');
 
-    const REPO   = 'TOOSII102/toosii-xd-ultra';
-    const BRANCH = 'main';
+const REPO   = 'TOOSII102/toosii-xd-ultra';
+const BRANCH = 'heroku';
 
-    const IS_HEROKU = !!(process.env.DYNO || process.env.HEROKU_APP_NAME);
-    const IS_PANEL  = !!(process.env.PTERODACTYL_SERVER_UUID || process.env.P_SERVER_UUID ||
-                         process.env.BOT_PLATFORM_PANEL || process.env.PANEL_HOST);
-    const PLATFORM      = IS_HEROKU ? 'Heroku' : IS_PANEL ? 'Panel' : 'VPS';
-    const PLATFORM_ICON = IS_HEROKU ? '☁️'     : IS_PANEL ? '🖥️'   : '💻';
+const IS_HEROKU  = !!process.env.DYNO || (!process.env.REPL_ID && !process.env.PTERODACTYL_SERVER_UUID && !process.env.BOT_PLATFORM_VPS);
+const IS_REPLIT  = !!process.env.REPL_ID;
+const PLATFORM   = IS_HEROKU ? 'Heroku' : IS_REPLIT ? 'Replit' : 'VPS';
 
-    // ── Session backup helpers ────────────────────────────────────────────────
-    const SESSION_DIR    = './session';
-    const CREDS_FILE     = path.join(SESSION_DIR, 'creds.json');
-    // Two backup locations: session/ (gitignored = safest) + data/ (redundant)
-    const BACKUP_PRIMARY = path.join(SESSION_DIR, 'creds_backup.json');
-    const BACKUP_DATA    = path.join('./data', 'session_creds_backup.json');
+function run(cmd, opts = {}) {
+    return execSync(cmd, { encoding: 'utf8', timeout: 120000, stdio: 'pipe', ...opts }).trim();
+}
 
-    function backupSession() {
-        try {
-            if (!fs.existsSync(CREDS_FILE)) return false;
-            // Primary: inside session/ dir (gitignored — survives git clean -fd)
-            fs.copyFileSync(CREDS_FILE, BACKUP_PRIMARY);
-            // Secondary: data/ dir (redundant)
-            try {
-                if (!fs.existsSync('./data')) fs.mkdirSync('./data', { recursive: true });
-                fs.copyFileSync(CREDS_FILE, BACKUP_DATA);
-            } catch {}
-            return true;
-        } catch { return false; }
-    }
+function getCurrentCommit() {
+    try { return run('git rev-parse HEAD'); } catch { return null; }
+}
 
-    function restoreSession() {
-        try {
-            // Try primary backup first (inside gitignored session/ dir)
-            const src = fs.existsSync(BACKUP_PRIMARY) ? BACKUP_PRIMARY
-                      : fs.existsSync(BACKUP_DATA) ? BACKUP_DATA : null;
-            if (!src) return false;
-            if (!fs.existsSync(SESSION_DIR)) fs.mkdirSync(SESSION_DIR, { recursive: true });
-            fs.copyFileSync(src, CREDS_FILE);
-            return true;
-        } catch { return false; }
-    }
-
-    function run(cmd, opts = {}) {
-        return execSync(cmd, { encoding: 'utf8', timeout: 120000, stdio: 'pipe', ...opts }).trim();
-    }
-    function hasGit() {
-        try { run('git rev-parse --git-dir'); return true; } catch { return false; }
-    }
-    function getCurrentCommit() {
-        try { return run('git rev-parse HEAD'); } catch { return null; }
-    }
-
-    function getLatestCommit() {
-        return new Promise((resolve, reject) => {
-            const token   = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
-            const headers = { 'User-Agent': 'toosii-xd-bot', 'Accept': 'application/vnd.github.v3+json' };
-            if (token) headers['Authorization'] = 'token ' + token;
-            const url = `https://api.github.com/repos/${REPO}/commits/${BRANCH}`;
-            https.get(url, { headers }, res => {
-                let body = '';
-                res.on('data', d => body += d);
-                res.on('end', () => {
-                    try {
-                        const json = JSON.parse(body);
-                        if (json.sha) {
-                            resolve({ sha: json.sha, message: json.commit?.message?.split('\n')[0] || '' });
-                        } else if (json.message) {
-                            reject(new Error('GitHub: ' + json.message.slice(0, 120)));
-                        } else {
-                            reject(new Error('Unexpected response (HTTP ' + res.statusCode + ')'));
-                        }
-                    } catch {
-                        reject(new Error('Could not parse GitHub response (HTTP ' + res.statusCode + ', ' + body.length + 'b)'));
-                    }
-                });
-            }).on('error', err => reject(new Error('Network error: ' + err.message)));
-        });
-    }
-
-    function downloadFile(url, dest) {
-        return new Promise((resolve, reject) => {
-            const follow = (u, hops) => {
-                if (hops > 10) return reject(new Error('Too many redirects'));
-                const lib = u.startsWith('https') ? https : http;
-                lib.get(u, { headers: { 'User-Agent': 'toosii-xd-bot' } }, res => {
-                    if ([301,302,307,308].includes(res.statusCode))
-                        return res.destroy(), follow(res.headers.location, hops + 1);
-                    if (res.statusCode !== 200)
-                        return res.destroy(), reject(new Error('HTTP ' + res.statusCode));
-                    const stream = fs.createWriteStream(dest);
-                    res.pipe(stream);
-                    stream.on('finish', () => stream.close(resolve));
-                    stream.on('error', err => { fs.unlink(dest, () => {}); reject(err); });
-                }).on('error', reject);
-            };
-            follow(url, 0);
-        });
-    }
-
-    module.exports = {
-        name: 'update',
-        aliases: ['upd', 'upgrade'],
-        description: 'Pull latest updates from GitHub and restart the bot',
-        category: 'owner',
-        ownerOnly: true,
-        async execute(sock, msg, args, prefix, opts) {
-            const jid      = msg.key.remoteJid;
-            const botName  = getBotName();
-            const header   = '╔═|〔  UPDATE 〕';
-            const footer   = `╚═|〔 ${botName} 〕`;
-
-            if (!opts?.isOwner && !opts?.isSudoer)
-                return sock.sendMessage(jid, { text: header + '\n║\n║  ⚠️ Owner only command\n║\n' + footer }, { quoted: msg });
-
-            try { await sock.sendMessage(jid, { react: { text: '🔄', key: msg.key } }); } catch {}
-
-            // ── Fetch latest commit ───────────────────────────────────────────
-            let latest;
-            try {
-                latest = await getLatestCommit();
-            } catch (err) {
-                return sock.sendMessage(jid, { text: [
-                    header, '║',
-                    '║  ❌ Could not reach GitHub',
-                    '║  ' + err.message,
-                    '║', footer
-                ].join('\n') }, { quoted: msg });
-            }
-
-            const latestShort = latest.sha?.slice(0, 7) || 'unknown';
-
-            // ── Heroku ────────────────────────────────────────────────────────
-            if (IS_HEROKU) {
-                return sock.sendMessage(jid, { text: [
-                    header, '║',
-                    '║  ▸ *Platform* : ' + PLATFORM_ICON + ' ' + PLATFORM,
-                    '║  ▸ *Status*   : ℹ️ Heroku detected',
-                    '║',
-                    '║  Heroku auto-deploys from GitHub.',
-                    '║  Push new code and Heroku will redeploy.',
-                    '║',
-                    '║  ▸ *Latest* : ' + latestShort + ' — ' + latest.message,
-                    '║', footer
-                ].join('\n') }, { quoted: msg });
-            }
-
-            // ── Step 1: Backup session BEFORE any file changes ────────────────
-            const sessionBacked = backupSession();
-
-            // ── Git-based update ──────────────────────────────────────────────
-            if (hasGit()) {
-                const current      = getCurrentCommit();
-                const currentShort = current?.slice(0, 7) || 'unknown';
-
-                if (current && latest.sha && current === latest.sha) {
-                    return sock.sendMessage(jid, { text: [
-                        header, '║',
-                        '║  ▸ *Status*   : ✅ Already up to date',
-                        '║  ▸ *Platform* : ' + PLATFORM_ICON + ' ' + PLATFORM,
-                        '║  ▸ *Commit*   : ' + currentShort,
-                        '║  ▸ *Message*  : ' + latest.message,
-                        '║', footer
-                    ].join('\n') }, { quoted: msg });
-                }
-
-                let pullErr, npmFailed;
+async function getLatestCommit() {
+    return new Promise((resolve, reject) => {
+        const url = `https://api.github.com/repos/${REPO}/commits/${BRANCH}`;
+        https.get(url, { headers: { 'User-Agent': 'TOOSII-XD-Bot' } }, res => {
+            let data = '';
+            res.on('data', c => data += c);
+            res.on('end', () => {
                 try {
-                    run('git fetch origin ' + BRANCH);
-                    run('git reset --hard origin/' + BRANCH);
-                } catch (e) { pullErr = e.message?.slice(0, 100); }
+                    const json = JSON.parse(data);
+                    resolve({ sha: json.sha, message: json.commit?.message?.split('\n')[0] || '' });
+                } catch { reject(new Error('Failed to parse GitHub response')); }
+            });
+        }).on('error', reject);
+    });
+}
 
-                if (pullErr) {
-                    return sock.sendMessage(jid, { text: [
-                        header, '║',
-                        '║  ▸ *Status*   : ❌ Pull failed',
-                        '║  ▸ *Platform* : ' + PLATFORM_ICON + ' ' + PLATFORM,
-                        '║  ▸ *Error*    : ' + pullErr,
-                        '║', footer
-                    ].join('\n') }, { quoted: msg });
-                }
+module.exports = {
+    name:        'update',
+    aliases:     ['upgrade', 'pullupdate'],
+    description: 'Pull latest changes from GitHub and restart the bot',
+    category:    'owner',
+    ownerOnly:   true,
 
-                try { run('npm install --omit=dev --no-audit', { cwd: process.cwd() }); } catch { npmFailed = true; }
+    async execute(sock, msg, args, prefix, ctx) {
+        const chatId  = msg.key.remoteJid;
+        try { await sock.sendMessage(chatId, { react: { text: '🔄', key: msg.key } }); } catch {}
+        const botName = getBotName();
+        const foot    = `╚═|〔 ${botName} 〕`;
 
-                // ── Step 2: Restore session AFTER npm install, BEFORE exit ────
-                restoreSession();
-
-                await sock.sendMessage(jid, { text: [
-                    header, '║',
-                    '║  ▸ *Status*   : ✅ Updated via git',
-                    '║  ▸ *Platform* : ' + PLATFORM_ICON + ' ' + PLATFORM,
-                    '║  ▸ *From*     : ' + currentShort,
-                    '║  ▸ *To*       : ' + latestShort,
-                    '║  ▸ *Message*  : ' + latest.message,
-                    '║  ▸ *Deps*     : ' + (npmFailed ? '⚠️ npm had warnings' : '✅ OK'),
-                    '║  ▸ *Session*  : ' + (sessionBacked ? '✅ Protected' : '⚠️ No session found'),
-                    '║', footer
-                ].join('\n') }, { quoted: msg });
-
-                setTimeout(() => process.exit(1), 2000);
-                return;
-            }
-
-            // ── Tarball download (no git) ─────────────────────────────────────
-            const tarUrl  = `https://api.github.com/repos/${REPO}/tarball/${BRANCH}`;
-            const tarPath = '/tmp/toosii-update.tar.gz';
-            const tmpDir  = '/tmp/toosii-update-extract';
-
-            let dlErr;
-            try {
-                await downloadFile(tarUrl, tarPath);
-                run(`rm -rf ${tmpDir} && mkdir -p ${tmpDir}`);
-                run(`tar xzf ${tarPath} -C ${tmpDir} --strip-components=1`);
-                (function copyDir(src, dst) {
-                    const nodePath = require('path'), nodefs = require('fs');
-                    const SKIP = new Set(['session', 'session_backup', 'data', '.env', 'node_modules', '.git']);
-                    nodefs.mkdirSync(dst, { recursive: true });
-                    for (const item of nodefs.readdirSync(src)) {
-                        if (SKIP.has(item)) continue;
-                        const s = nodePath.join(src, item), d = nodePath.join(dst, item);
-                        if (nodefs.statSync(s).isDirectory()) copyDir(s, d);
-                        else nodefs.copyFileSync(s, d);
-                    }
-                })(tmpDir, process.cwd());
-                run('npm install --omit=dev --no-audit', { cwd: process.cwd() });
-                run(`rm -rf ${tarPath} ${tmpDir}`);
-                // ── Step 2: Restore session AFTER npm install, BEFORE exit ────
-                restoreSession();
-            } catch (e) { dlErr = e.message?.slice(0, 120); }
-
-            if (dlErr) {
-                return sock.sendMessage(jid, { text: [
-                    header, '║',
-                    '║  ▸ *Status*   : ❌ Download failed',
-                    '║  ▸ *Platform* : ' + PLATFORM_ICON + ' ' + PLATFORM,
-                    '║  ▸ *Error*    : ' + dlErr,
-                    '║', footer
-                ].join('\n') }, { quoted: msg });
-            }
-
-            await sock.sendMessage(jid, { text: [
-                header, '║',
-                '║  ▸ *Status*   : ✅ Updated via download',
-                '║  ▸ *Platform* : ' + PLATFORM_ICON + ' ' + PLATFORM,
-                '║  ▸ *To*       : ' + latestShort,
-                '║  ▸ *Message*  : ' + latest.message,
-                '║  ▸ *Session*  : ' + (sessionBacked ? '✅ Protected' : '⚠️ No session found'),
-                '║', footer
-            ].join('\n') }, { quoted: msg });
-
-            setTimeout(() => process.exit(1), 2000);
+        if (!ctx?.isOwnerUser && !ctx?.isSudoUser) {
+            return await sock.sendMessage(chatId, {
+                text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : ❌ Owner only\n║\n${foot}`
+            }, { quoted: msg });
         }
-    };
-  
+
+        // ── Fetch latest GitHub commit info ───────────────────────────────────
+        let latest;
+        try { latest = await getLatestCommit(); }
+        catch (err) {
+            return await sock.sendMessage(chatId, {
+                text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : ❌ GitHub unreachable\n║ ▸ *Reason* : ${err.message}\n║\n${foot}`
+            }, { quoted: msg });
+        }
+
+        const shortLatest = latest.sha?.slice(0, 7) || 'unknown';
+
+        // ── Heroku: git pull is not supported — filesystem is ephemeral ───────
+        if (IS_HEROKU) {
+            return await sock.sendMessage(chatId, {
+                text: [
+                    `╔═|〔  UPDATE 〕`,
+                    `║`,
+                    `║ ▸ *Platform* : ☁️ Heroku`,
+                    `║ ▸ *Status*   : ℹ️ Git pull not supported`,
+                    `║`,
+                    `║  Heroku's filesystem is ephemeral — files`,
+                    `║  reset on every dyno restart, so git pull`,
+                    `║  cannot persist updates.`,
+                    `║`,
+                    `║ ▸ *Latest commit* : ${shortLatest}`,
+                    `║ ▸ *Message*       : ${latest.message}`,
+                    `║`,
+                    `║  *To update on Heroku:*`,
+                    `║  1. Push new code to GitHub (main branch)`,
+                    `║  2. Heroku Dashboard → Deploy → Manual deploy`,
+                    `║     → Deploy Branch  (heroku branch)`,
+                    `║  OR enable Auto-deploy on the heroku branch`,
+                    `║`,
+                    `║ ▸ Use *${prefix}restart* to just restart the bot`,
+                    `║`,
+                    `${foot}`,
+                ].join('\n')
+            }, { quoted: msg });
+        }
+
+        // ── Replit / VPS: run git pull ────────────────────────────────────────
+        const current = getCurrentCommit();
+        const shortCurrent = current?.slice(0, 7) || 'unknown';
+
+        if (current && latest.sha && current === latest.sha) {
+            return await sock.sendMessage(chatId, {
+                text: [
+                    `╔═|〔  UPDATE 〕`,
+                    `║`,
+                    `║ ▸ *Status*   : ✅ Already up to date`,
+                    `║ ▸ *Platform* : ${PLATFORM}`,
+                    `║ ▸ *Commit*   : ${shortCurrent}`,
+                    `║ ▸ *Changes*  : ${latest.message}`,
+                    `║`,
+                    `${foot}`,
+                ].join('\n')
+            }, { quoted: msg });
+        }
+
+        let pullErr, npmErr;
+        try {
+            run(`git fetch origin ${BRANCH}`);
+            run(`git reset --hard origin/${BRANCH}`);
+        } catch (err) { pullErr = err.message?.slice(0, 100); }
+
+        if (pullErr) {
+            return await sock.sendMessage(chatId, {
+                text: `╔═|〔  UPDATE 〕\n║\n║ ▸ *Status* : ❌ Pull failed\n║ ▸ *Reason* : ${pullErr}\n║\n${foot}`
+            }, { quoted: msg });
+        }
+
+        try { run('npm install --production', { cwd: process.cwd() }); }
+        catch (e) { npmErr = true; }
+
+        await sock.sendMessage(chatId, {
+            text: [
+                `╔═|〔  UPDATE 〕`,
+                `║`,
+                `║ ▸ *Status*   : ✅ Updated successfully`,
+                `║ ▸ *Platform* : ${PLATFORM}`,
+                `║ ▸ *From*     : ${shortCurrent}`,
+                `║ ▸ *To*       : ${shortLatest}`,
+                `║ ▸ *Changes*  : ${latest.message}`,
+                `║ ▸ *Deps*     : ${npmErr ? '⚠️ npm had warnings' : '✅ Installed'}`,
+                `║`,
+                `║ ▸ 🔄 Restarting in 3s...`,
+                `║`,
+                `${foot}`,
+            ].join('\n')
+        }, { quoted: msg });
+
+        setTimeout(() => process.exit(0), 3000);
+    },
+};
