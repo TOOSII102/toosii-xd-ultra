@@ -5635,6 +5635,7 @@ async function startBot(loginMode = 'auto', loginData = null) {
                 // these arrive from the owner's secondary device (phone) as type='append'.
                 if (type === 'append') {
                     const m0 = messages?.[0];
+                    originalConsoleMethods.log(`🔬 [M0-DUMP] fromMe=${m0?.key?.fromMe} hasMsg=${!!m0?.message} stub=${m0?.messageStubType} keys=${m0?.message ? Object.keys(m0.message).join(',') : 'NULL'}`);
                     if (m0?.key?.fromMe && m0?.message) {
                         const c0 = m0.message;
                         const hasBtn = !!(c0?.interactiveResponseMessage || c0?.buttonsResponseMessage ||
