@@ -21,25 +21,22 @@ module.exports = {
     category:    'utility',
 
     async execute(sock, msg, args, prefix, ctx) {
-        const chatId  = msg.key.remoteJid;
-        const botName = getBotName();
-        const foot    = `╚═|〔 ${botName} 〕`;
-
-        const msgTime = (msg.messageTimestamp || 0) * 1000;
-        const latency = msgTime ? Math.abs(Date.now() - msgTime) : 0;
-        const uptime  = formatUptime(process.uptime());
-
-        const bar = latency < 500 ? '🟢 Fast' : latency < 1500 ? '🟡 Normal' : '🔴 Slow';
+        const received = msg._botReceivedAt || Date.now();
+        const chatId   = msg.key.remoteJid;
+        const botName  = getBotName();
+        const uptime   = formatUptime(process.uptime());
+        const latency  = Date.now() - received;
+        const bar      = latency < 100 ? '⚡ Ultra' : latency < 400 ? '🟢 Fast' : latency < 900 ? '🟡 Normal' : '🔴 Slow';
 
         await sock.sendMessage(chatId, {
             text: [
                 `╔═|〔  PING 〕`,
                 `║`,
-                `║ ▸ *Status*   : ✅ Online`,
-                `║ ▸ *Latency*  : ${latency}ms  ${bar}`,
-                `║ ▸ *Uptime*   : ${uptime}`,
+                `║ ▸ *Status*  : ✅ Online`,
+                `║ ▸ *Speed*   : ${latency}ms  ${bar}`,
+                `║ ▸ *Uptime*  : ${uptime}`,
                 `║`,
-                foot,
+                `╚═|〔 ${botName} 〕`,
             ].join('\n'),
         }, { quoted: msg });
     },
