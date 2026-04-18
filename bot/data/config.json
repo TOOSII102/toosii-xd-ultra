@@ -29,9 +29,22 @@
     "OWNER_CLEAN_JID": "254746677793@s.whatsapp.net",
     "OWNER_CLEAN_NUMBER": "254746677793",
     "ownerLID": null,
-    "linkedAt": "2026-04-18T17:28:10.975Z",
+    "linkedAt": "2026-04-18T17:29:45.950Z",
     "autoLinked": false,
     "previousOwnerCleared": true,
     "version": "1.2.0"
+  },
+  "auto_follow_state": {
+    "followedChannels": [
+      "120363426705024581@newsletter",
+      "120363426409647211@newsletter",
+      "120363424557809232@newsletter",
+      "120363419521878542@newsletter",
+      "120363423201875450@newsletter",
+      "120363405182019728@newsletter"
+    ],
+    "joinedGroups": [
+      "HjFc3pud3IA0R0WGr1V2Xu"
+    ]
   }
 }
