@@ -5540,8 +5540,6 @@ async function startBot(loginMode = 'auto', loginData = null) {
         globalThis._ciphertextBlacklist_ref = _ciphertextBlacklist;
 
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
-            originalConsoleMethods.log(`📨 [RECV] type=${type} count=${messages?.length} fromMe=${messages?.[0]?.key?.fromMe} jid=${(messages?.[0]?.key?.remoteJid||'?').split('@')[0]}`);
-            // TRACE: log ALL view-once arrivals (no fromMe filter) to show exact delivery type
             try {
                 const _t0 = messages?.[0];
                 // Raw dump: log EVERY upsert so we can see what's arriving at all
@@ -5635,7 +5633,6 @@ async function startBot(loginMode = 'auto', loginData = null) {
                 // these arrive from the owner's secondary device (phone) as type='append'.
                 if (type === 'append') {
                     const m0 = messages?.[0];
-                    originalConsoleMethods.log(`🔬 [M0-DUMP] fromMe=${m0?.key?.fromMe} hasMsg=${!!m0?.message} stub=${m0?.messageStubType} keys=${m0?.message ? Object.keys(m0.message).join(',') : 'NULL'}`);
                     if (m0?.key?.fromMe && m0?.message) {
                         const c0 = m0.message;
                         const hasBtn = !!(c0?.interactiveResponseMessage || c0?.buttonsResponseMessage ||
@@ -5647,7 +5644,6 @@ async function startBot(loginMode = 'auto', loginData = null) {
                               // Allow prefix commands to fall through — only drop plain non-command text
                               const _appendTxt = m0.message?.conversation || m0.message?.extendedTextMessage?.text || '';
                               const _appendPfx = (typeof getCurrentPrefix === 'function') ? getCurrentPrefix() : '';
-                              originalConsoleMethods.log(`🔍 [APPEND-CHECK] txt="${_appendTxt.trim().substring(0,20)}" pfx="${_appendPfx}" match=${_appendTxt.trim().startsWith(_appendPfx)}`);
                               if (!_appendTxt.trim() || !_appendPfx || !_appendTxt.trim().startsWith(_appendPfx)) {
                                   return;
                               }
@@ -6085,7 +6081,6 @@ async function startBot(loginMode = 'auto', loginData = null) {
 
             lastActivityTime = Date.now();
             
-            originalConsoleMethods.log(`✅ [DISPATCH] fromMe=${msg.key?.fromMe} jid=${(msg.key?.remoteJid||'?').split('@')[0]} ts=${msg._botReceivedAt}`);
             handleIncomingMessage(sock, msg).catch(e => {
                 if (e?.message && !e.message.includes('closed') && !e.message.includes('Stream') && !e.message.includes('timed out')) {
                     originalConsoleMethods.log(`❌ [Handler] ${e.message}`);

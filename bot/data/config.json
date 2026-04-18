@@ -22,14 +22,14 @@
     "updatedAt": "2026-04-18T20:35:18.954Z",
     "totalGroups": 0
   },
-  "botId": "254746677793:93@s.whatsapp.net",
+  "botId": "254746677793:94@s.whatsapp.net",
   "owner_data": {
-    "OWNER_JID": "254746677793:93@s.whatsapp.net",
+    "OWNER_JID": "254746677793:94@s.whatsapp.net",
     "OWNER_NUMBER": "254746677793",
     "OWNER_CLEAN_JID": "254746677793@s.whatsapp.net",
     "OWNER_CLEAN_NUMBER": "254746677793",
     "ownerLID": null,
-    "linkedAt": "2026-04-18T17:58:27.026Z",
+    "linkedAt": "2026-04-18T20:43:32.477Z",
     "autoLinked": false,
     "previousOwnerCleared": true,
     "version": "1.2.0"
