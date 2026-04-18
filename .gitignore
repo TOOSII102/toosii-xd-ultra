@@ -4,9 +4,8 @@
 .env.*
 
 # ── Session files ─────────────────────────────────────────────────────────────
-# Regenerated from SESSION_ID env var on every startup — never commit
+# Never commit — creds are restored from SESSION_ID env var at startup
 bot/session/
-!bot/session/creds.json
 
 # ── Node dependencies ─────────────────────────────────────────────────────────
 node_modules/

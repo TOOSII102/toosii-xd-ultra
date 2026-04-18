@@ -149,9 +149,6 @@ module.exports = {
         }
 
         lines.push(`║`);
-        lines.push(`║  👨‍💻  *Creator*      »  @toosiitech`);
-        lines.push(`║  📢  *View Channel*  »  https://whatsapp.com/channel/0029VbCGMJeEquiVSIthcK03`);
-        lines.push(`║`);
         lines.push(`╚═╝`);
 
         const caption = lines.join('\n');

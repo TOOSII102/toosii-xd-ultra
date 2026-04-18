@@ -1,13 +1,19 @@
+'use strict';
 const { execSync } = require('child_process');
 const https = require('https');
+const path  = require('path');
+const fs    = require('fs');
 const { getBotName } = require('../../lib/botname');
 
 const REPO   = 'TOOSII102/toosii-xd-ultra';
 const BRANCH = 'heroku';
 
-const IS_HEROKU  = !!process.env.DYNO || (!process.env.REPL_ID && !process.env.PTERODACTYL_SERVER_UUID && !process.env.BOT_PLATFORM_VPS);
-const IS_REPLIT  = !!process.env.REPL_ID;
-const PLATFORM   = IS_HEROKU ? 'Heroku' : IS_REPLIT ? 'Replit' : 'VPS';
+const IS_HEROKU = !!process.env.DYNO;
+const IS_REPLIT = !!process.env.REPL_ID;
+const PLATFORM  = IS_HEROKU ? 'Heroku' : IS_REPLIT ? 'Replit' : 'VPS/Panel';
+
+const SESSION_FILE = path.join(__dirname, '../../session/creds.json');
+const GITHUB_URL   = `https://github.com/${REPO}.git`;
 
 function run(cmd, opts = {}) {
     return execSync(cmd, { encoding: 'utf8', timeout: 120000, stdio: 'pipe', ...opts }).trim();
@@ -16,8 +22,6 @@ function run(cmd, opts = {}) {
 function getCurrentCommit() {
     try { return run('git rev-parse HEAD'); } catch { return null; }
 }
-
-const GITHUB_URL = `https://github.com/${REPO}.git`;
 
 async function getLatestCommit() {
     return new Promise((resolve, reject) => {
@@ -38,7 +42,7 @@ async function getLatestCommit() {
 module.exports = {
     name:        'update',
     aliases:     ['upgrade', 'pullupdate'],
-    description: 'Pull latest changes from GitHub and restart the bot',
+    description: 'Pull latest changes from GitHub and keep bot running',
     category:    'owner',
     ownerOnly:   true,
 
@@ -54,7 +58,28 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        // ── Fetch latest GitHub commit info ───────────────────────────────────
+        // Heroku: ephemeral filesystem — git pull can't persist
+        if (IS_HEROKU) {
+            let latest;
+            try { latest = await getLatestCommit(); } catch { latest = { sha: '?', message: '?' }; }
+            return await sock.sendMessage(chatId, {
+                text: [
+                    `╔═|〔  UPDATE 〕`,
+                    `║`,
+                    `║ ▸ *Platform* : ☁️ Heroku`,
+                    `║ ▸ *Status*   : ℹ️ Git pull not supported here`,
+                    `║`,
+                    `║  Push to GitHub then redeploy from`,
+                    `║  the Heroku dashboard (heroku branch).`,
+                    `║`,
+                    `║ ▸ *Latest* : ${latest.sha?.slice(0, 7)} — ${latest.message}`,
+                    `║`,
+                    `${foot}`,
+                ].join('\n')
+            }, { quoted: msg });
+        }
+
+        // Fetch latest commit info from GitHub
         let latest;
         try { latest = await getLatestCommit(); }
         catch (err) {
@@ -63,40 +88,9 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        const shortLatest = latest.sha?.slice(0, 7) || 'unknown';
-
-        // ── Heroku: git pull is not supported — filesystem is ephemeral ───────
-        if (IS_HEROKU) {
-            return await sock.sendMessage(chatId, {
-                text: [
-                    `╔═|〔  UPDATE 〕`,
-                    `║`,
-                    `║ ▸ *Platform* : ☁️ Heroku`,
-                    `║ ▸ *Status*   : ℹ️ Git pull not supported`,
-                    `║`,
-                    `║  Heroku's filesystem is ephemeral — files`,
-                    `║  reset on every dyno restart, so git pull`,
-                    `║  cannot persist updates.`,
-                    `║`,
-                    `║ ▸ *Latest commit* : ${shortLatest}`,
-                    `║ ▸ *Message*       : ${latest.message}`,
-                    `║`,
-                    `║  *To update on Heroku:*`,
-                    `║  1. Push new code to GitHub (main branch)`,
-                    `║  2. Heroku Dashboard → Deploy → Manual deploy`,
-                    `║     → Deploy Branch  (heroku branch)`,
-                    `║  OR enable Auto-deploy on the heroku branch`,
-                    `║`,
-                    `║ ▸ Use *${prefix}restart* to just restart the bot`,
-                    `║`,
-                    `${foot}`,
-                ].join('\n')
-            }, { quoted: msg });
-        }
-
-        // ── Replit / VPS: run git pull ────────────────────────────────────────
-        const current = getCurrentCommit();
+        const current      = getCurrentCommit();
         const shortCurrent = current?.slice(0, 7) || 'unknown';
+        const shortLatest  = latest.sha?.slice(0, 7)  || 'unknown';
 
         if (current && latest.sha && current === latest.sha) {
             return await sock.sendMessage(chatId, {
@@ -113,11 +107,28 @@ module.exports = {
             }, { quoted: msg });
         }
 
+        // ── Backup session creds before any git operation ──────────────────────
+        let savedCreds = null;
+        try {
+            if (fs.existsSync(SESSION_FILE)) {
+                savedCreds = fs.readFileSync(SESSION_FILE);
+            }
+        } catch {}
+
+        // ── Pull latest code ───────────────────────────────────────────────────
         let pullErr, npmErr;
         try {
             run(`git fetch ${GITHUB_URL} ${BRANCH}`);
             run(`git reset --hard FETCH_HEAD`);
         } catch (err) { pullErr = err.message?.slice(0, 100); }
+
+        // ── Always restore creds.json regardless of pull result ────────────────
+        if (savedCreds) {
+            try {
+                fs.mkdirSync(path.dirname(SESSION_FILE), { recursive: true });
+                fs.writeFileSync(SESSION_FILE, savedCreds);
+            } catch {}
+        }
 
         if (pullErr) {
             return await sock.sendMessage(chatId, {
@@ -125,9 +136,11 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        try { run('npm install --production', { cwd: process.cwd() }); }
-        catch (e) { npmErr = true; }
+        // ── Install any new dependencies ───────────────────────────────────────
+        try { run('npm install --production', { cwd: path.join(__dirname, '../../') }); }
+        catch { npmErr = true; }
 
+        // ── Notify then exit cleanly so the panel/workflow restarts the bot ────
         await sock.sendMessage(chatId, {
             text: [
                 `╔═|〔  UPDATE 〕`,
@@ -137,14 +150,15 @@ module.exports = {
                 `║ ▸ *From*     : ${shortCurrent}`,
                 `║ ▸ *To*       : ${shortLatest}`,
                 `║ ▸ *Changes*  : ${latest.message}`,
-                `║ ▸ *Deps*     : ${npmErr ? '⚠️ npm had warnings' : '✅ Installed'}`,
+                `║ ▸ *Deps*     : ${npmErr ? '⚠️ npm had warnings' : '✅ Up to date'}`,
                 `║`,
-                `║ ▸ 🔄 Restarting in 3s...`,
+                `║ ▸ 🔄 Restarting...`,
                 `║`,
                 `${foot}`,
             ].join('\n')
         }, { quoted: msg });
 
-        setTimeout(() => process.exit(1), 3000);
+        // Give WhatsApp time to deliver the message before exit
+        setTimeout(() => process.exit(0), 3000);
     },
 };
