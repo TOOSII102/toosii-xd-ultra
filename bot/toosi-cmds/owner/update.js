@@ -158,6 +158,7 @@ module.exports = {
         }, { quoted: msg });
 
         // Give WhatsApp time to deliver the message before exit
-        setTimeout(() => process.exit(0), 3000);
+        // Exit code 1 signals the launcher to restart the bot automatically
+        setTimeout(() => process.exit(1), 3000);
     },
 };
