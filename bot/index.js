@@ -5720,7 +5720,6 @@ async function startBot(loginMode = "auto", loginData = null) {
               if (_avFresh) {
                 const _appendVo = detectViewOnceMedia(m0.message);
                 if (_appendVo) {
-                  // [SILENT] originalConsoleMethods.log(`🔍 [AV-APPEND] Fresh view-once (${_appendVo.type}) in append event — processing...`);
                   handleViewOnceDetection(sock, m0).catch(err => {
                     originalConsoleMethods.log(`❌ [AV-APPEND] Error: ${err.message}`);
                   });
@@ -5776,9 +5775,16 @@ async function startBot(loginMode = "auto", loginData = null) {
 
       // Never drop media/view-once messages as "old" — they can arrive slightly delayed
       const _msgHasMedia = !!msg.message?.imageMessage || !!msg.message?.videoMessage || !!msg.message?.audioMessage || !!msg.message?.viewOnceMessage || !!msg.message?.viewOnceMessageV2 || !!msg.message?.viewOnceMessageV2Extension;
-      if (_isOldMsg && !_msgHasMedia) {
+      // Never drop owner messages as "old" — owner commands must always be processed
+      const _isOwnerMsg = msg.key?.fromMe === true || (() => {
+        const _senderRaw = (msg.key?.participant || msg.key?.remoteJid || "").split("@")[0].split(":")[0];
+        const _ownerRaw = (typeof OWNER_CLEAN_NUMBER !== "undefined" ? OWNER_CLEAN_NUMBER : "").replace(/[^0-9]/g, "");
+        return _ownerRaw && _senderRaw === _ownerRaw;
+      })();
+      if (_isOldMsg && !_msgHasMedia && !_isOwnerMsg) {
         return;
       }
+
 
       // Log every incoming message immediately — covers text AND media
       if (msg.message && msg.key?.remoteJid && !msg.key.fromMe) {
