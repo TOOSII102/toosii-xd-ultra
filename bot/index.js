@@ -1105,21 +1105,43 @@ function _isLogSuppressed(msg) {
   }
   return false;
 }
-const _Y = "[38;2;255;200;0m";
-const _YB = "[1m[38;2;255;200;0m";
-const _YD = "[2m[38;2;255;200;0m";
-const _G = "[38;2;0;255;65m";
-const _GB = "[1m[38;2;0;255;65m";
-const _GD = "[2m[38;2;0;255;65m";
-const _R = "[0m";
-const _CYAN = "[38;2;0;220;255m";
-const _CYANB = "[1m[38;2;0;220;255m";
-const _MAG = "[38;2;200;100;255m";
-const _MAGB = "[1m[38;2;200;100;255m";
-const _BL = "[38;2;80;160;255m";
-const _BLB = "[1m[38;2;80;160;255m";
-const _ORG = "[38;2;255;140;0m";
-const _ORGB = "[1m[38;2;255;140;0m";
+// ─── ANSI palette ─────────────────────────────────────────────────────
+const _RST    = "\x1b[0m";
+const _BOLD   = "\x1b[1m";
+const _DIM    = "\x1b[2m";
+const _GREEN  = "\x1b[38;2;80;215;100m";
+const _GREENB = "\x1b[1m\x1b[38;2;80;215;100m";
+const _GREEND = "\x1b[2m\x1b[38;2;80;215;100m";
+const _CYAN   = "\x1b[38;2;60;210;255m";
+const _CYANB  = "\x1b[1m\x1b[38;2;60;210;255m";
+const _BLUE   = "\x1b[38;2;100;160;255m";
+const _YELLOW = "\x1b[38;2;255;200;60m";
+const _YELLOWB= "\x1b[1m\x1b[38;2;255;200;60m";
+const _YELLOWD= "\x1b[2m\x1b[38;2;255;200;60m";
+const _RED    = "\x1b[38;2;255;90;90m";
+const _REDB   = "\x1b[1m\x1b[38;2;255;90;90m";
+const _MAG    = "\x1b[38;2;195;110;255m";
+const _MAGB   = "\x1b[1m\x1b[38;2;195;110;255m";
+const _ORANGE = "\x1b[38;2;255;155;50m";
+const _ORANGEB= "\x1b[1m\x1b[38;2;255;155;50m";
+const _GRAY   = "\x1b[38;2;130;130;130m";
+const _WHITE  = "\x1b[38;2;210;210;210m";
+// Legacy aliases — keep for compatibility throughout the rest of the file
+const _Y = _YELLOW;  const _YB = _YELLOWB; const _YD = _YELLOWD;
+const _G = _GREEN;   const _GB = _GREENB;  const _GD = _GREEND;
+const _R = _RST;
+const _BL  = _BLUE;   const _BLB = "\x1b[1m\x1b[38;2;100;160;255m";
+const _ORG = _ORANGE; const _ORGB= _ORANGEB;
+// ─── Box drawing helpers ─────────────────────────────────────────────
+const _BOX_W = 54;
+function _boxHdr(label, time, cBold) {
+  const tag   = `─[ ${label} ]`;
+  const stamp = ` ${time} ─`;
+  const fill  = Math.max(2, _BOX_W - tag.length - stamp.length);
+  return `${cBold}┌${tag}${"\u2500".repeat(fill)}${stamp}┐${_RST}`;
+}
+function _boxRow(text, c) { return `${c}│  ${text}${_RST}`; }
+function _boxFtr(c)        { return `${c}└${"\u2500".repeat(_BOX_W)}┘${_RST}`; }
 const _systemBuffer = [];
 const _FLUSH_INTERVAL = 0;
 let _lastFlush = Date.now();
@@ -1138,12 +1160,13 @@ function _isSystemLog(text) {
   return false;
 }
 function _getTime() {
-  return new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" });
+  return new Date().toLocaleTimeString("en-GB", {
+    timeZone: process.env.TIME_ZONE || "Africa/Nairobi",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+  });
 }
 function _flushSystemBuffer() {
-  if (_systemBuffer.length === 0) {
-    return;
-  }
+  if (_systemBuffer.length === 0) return;
   const items = _systemBuffer.splice(0);
   _lastFlush = Date.now();
   const counts = {};
@@ -1160,46 +1183,26 @@ function _flushSystemBuffer() {
       counts.mediaStored = (counts.mediaStored || 0) + 1;
     } else if (/saved sticker/i.test(text)) {
       counts.stickersStored = (counts.stickersStored || 0) + 1;
-    } else if (/trimmed to/i.test(text)) {
-      counts.cacheTrimmed = (counts.cacheTrimmed || 0) + 1;
-    } else if (/trimming caches/i.test(text)) {
+    } else if (/trimmed to|trimming caches/i.test(text)) {
       counts.cacheTrimmed = (counts.cacheTrimmed || 0) + 1;
     } else {
-      const short = text.length > 60 ? text.substring(0, 57) + "..." : text;
+      const short = text.length > 58 ? text.substring(0, 55) + "…" : text;
       details.push(short);
     }
   }
-  const lines = [];
-  if (counts.diskCleanup) {
-    lines.push(`🧹 Disk cleanup: ${counts.diskCleanup} items removed`);
-  }
-  if (counts.highMemory) {
-    lines.push(`⚠️ Memory peak: ${counts.highMemory}MB`);
-  }
-  if (counts.mediaStored) {
-    lines.push(`💾 Media stored: ${counts.mediaStored} file${counts.mediaStored > 1 ? "s" : ""}`);
-  }
-  if (counts.stickersStored) {
-    lines.push(`🎨 Stickers saved: ${counts.stickersStored}`);
-  }
-  if (counts.cacheTrimmed) {
-    lines.push(`📦 Cache trimmed: ${counts.cacheTrimmed}x`);
-  }
-  for (const d of details.slice(0, 3)) {
-    lines.push(`│  ${d}`);
-  }
-  if (details.length > 3) {
-    lines.push(`│  ... +${details.length - 3} more`);
-  }
-  if (lines.length === 0) {
-    return;
-  }
+  const rows = [];
+  if (counts.diskCleanup)    rows.push(`🧹 Disk  ·  ${counts.diskCleanup} items removed`);
+  if (counts.highMemory)     rows.push(`⚠  Memory peak  ·  ${counts.highMemory} MB`);
+  if (counts.mediaStored)    rows.push(`💾 Media  ·  ${counts.mediaStored} file${counts.mediaStored > 1 ? "s" : ""} stored`);
+  if (counts.stickersStored) rows.push(`🎨 Stickers  ·  ${counts.stickersStored} saved`);
+  if (counts.cacheTrimmed)   rows.push(`📦 Cache  ·  trimmed ${counts.cacheTrimmed}x`);
+  for (const d of details.slice(0, 3)) rows.push(d);
+  if (details.length > 3) rows.push(`+${details.length - 3} more`);
+  if (rows.length === 0) return;
   const time = _getTime();
-  originalConsoleMethods.log(`${_YB}╔═|〔  ⚙️ SYSTEM 〕 ${_YD}${time}${_R}`);
-  for (const line of lines) {
-    originalConsoleMethods.log(`${_Y}║ ▸ ${line}${_R}`);
-  }
-  originalConsoleMethods.log(`${_Y}╚═╝${_R}`);
+  originalConsoleMethods.log(_boxHdr("SYSTEM", time, _YELLOWB));
+  for (const row of rows) originalConsoleMethods.log(_boxRow(row, _YELLOW));
+  originalConsoleMethods.log(_boxFtr(_YELLOW));
 }
 function _bufferSystemLog(text) {
   _systemBuffer.push({
@@ -1218,130 +1221,78 @@ function _bufferSystemLog(text) {
   }
 }
 class UltraCleanLogger {
+  static _inline(badge, badgeColor, msgColor, ...args) {
+    const t   = `${_GRAY}[${_getTime()}]${_RST}`;
+    const lv  = `${badgeColor}${badge}${_RST}`;
+    const msg = `${msgColor}${args.join(" ")}${_RST}`;
+    originalConsoleMethods.log(`${t}  ${lv}  ${msg}`);
+  }
+  static _block(label, cBold, cLine, ...bodyLines) {
+    const time = _getTime();
+    originalConsoleMethods.log(_boxHdr(label, time, cBold));
+    for (const line of bodyLines) originalConsoleMethods.log(_boxRow(line, cLine));
+    originalConsoleMethods.log(_boxFtr(cLine));
+  }
   static log(...args) {
     const firstArg = args[0];
     if (typeof firstArg === "string") {
       const lower = firstArg.toLowerCase();
-      if (_isLogSuppressed(lower)) {
-        return;
-      }
-      if (_isSystemLog(firstArg)) {
-        _bufferSystemLog(args.join(" "));
-        return;
-      }
+      if (_isLogSuppressed(lower)) return;
+      if (_isSystemLog(firstArg)) { _bufferSystemLog(args.join(" ")); return; }
     }
-    const timestamp = chalk.gray(`[${_getTime()}]`);
-    originalConsoleMethods.log(timestamp, ...args);
+    const t = `${_GRAY}[${_getTime()}]${_RST}`;
+    originalConsoleMethods.log(`${t}  ${_GRAY}·${_RST}  ${_WHITE}${args.join(" ")}${_RST}`);
   }
   static error(...args) {
     const message = args.join(" ").toLowerCase();
-    for (let i = 0; i < _errSuppressArr.length; i++) {
-      if (message.includes(_errSuppressArr[i])) {
-        return;
-      }
-    }
-    const text = args.join(" ");
-    const time = _getTime();
-    originalConsoleMethods.error(`${_YB}╔═|〔  ❌ ERROR 〕 ${_YD}${time}${_R}`);
-    originalConsoleMethods.error(`${_Y}║ ▸ ${text}${_R}`);
-    originalConsoleMethods.error(`${_Y}╚═╝${_R}`);
+    for (let i = 0; i < _errSuppressArr.length; i++) if (message.includes(_errSuppressArr[i])) return;
+    UltraCleanLogger._block("ERROR", _REDB, _RED, args.join(" "));
   }
   static success(...args) {
     const text = args.join(" ");
-    if (_isSystemLog(text)) {
-      _bufferSystemLog(text);
-      return;
-    }
-    const t = _getTime();
-    originalConsoleMethods.log(`${_GB}[${t}]${_R} ${_G}✔${_R}  ${chalk.greenBright(text)}`);
+    if (_isSystemLog(text)) { _bufferSystemLog(text); return; }
+    UltraCleanLogger._inline("✓", _GREENB, _GREEN, text);
   }
   static info(...args) {
     const text = args.join(" ");
-    if (_isSystemLog(text)) {
-      _bufferSystemLog(text);
-      return;
-    }
-    const timestamp = chalk.blue(`[${_getTime()}]`);
-    originalConsoleMethods.log(timestamp, chalk.blue("ℹ️"), ...args);
+    if (_isSystemLog(text)) { _bufferSystemLog(text); return; }
+    UltraCleanLogger._inline("i", _BLUE, _WHITE, text);
   }
   static warning(...args) {
     const message = args.join(" ").toLowerCase();
-    for (let i = 0; i < _warnSuppressArr.length; i++) {
-      if (message.includes(_warnSuppressArr[i])) {
-        return;
-      }
-    }
+    for (let i = 0; i < _warnSuppressArr.length; i++) if (message.includes(_warnSuppressArr[i])) return;
     const text = args.join(" ");
-    if (_isSystemLog(text)) {
-      _bufferSystemLog(text);
-      return;
-    }
-    const time = _getTime();
-    originalConsoleMethods.log(`${_YB}╔═|〔  ⚠️ WARNING 〕 ${_YD}${time}${_R}`);
-    originalConsoleMethods.log(`${_Y}║ ▸ ${text}${_R}`);
-    originalConsoleMethods.log(`${_Y}╚═╝${_R}`);
+    if (_isSystemLog(text)) { _bufferSystemLog(text); return; }
+    UltraCleanLogger._block("WARNING", _YELLOWB, _YELLOW, text);
   }
-  static event(...args) {
-    const timestamp = `${_MAGB}[${_getTime()}]${_R}`;
-    originalConsoleMethods.log(timestamp, `${_MAG}🎭${_R}`, ...args.map(a => `${_MAG}${a}${_R}`));
-  }
-  static command(...args) {
-    const timestamp = `${_CYANB}[${_getTime()}]${_R}`;
-    originalConsoleMethods.log(timestamp, `${_CYAN}💬${_R}`, ...args.map(a => `${_CYAN}${a}${_R}`));
-  }
+  static event(...args)   { UltraCleanLogger._inline("◆", _MAGB, _MAG, ...args); }
+  static command(...args) { UltraCleanLogger._inline("»", _CYANB, _CYAN, ...args); }
   static ownerCommand(...args) {
-    const time = _getTime();
-    const msg = args.join(" ");
-    originalConsoleMethods.log(`${_GB}╔═|〔  ⚡ 👑 OWNER 〕 ${_GD}${time}${_R}`);
-    originalConsoleMethods.log(`${_G}║ ▸ ${_GB}${msg}${_R}`);
-    originalConsoleMethods.log(`${_G}╚═╝${_R}`);
+    UltraCleanLogger._block("OWNER", _GREENB, _GREEN, args.join(" "));
   }
   static ownerMessage(...args) {
-    const time = _getTime();
-    const msg = args.join(" ");
-    originalConsoleMethods.log(`${_GD}╔═|〔  💬 👑 OWNER 〕 ${time}${_R}`);
-    originalConsoleMethods.log(`${_G}║ ▸ ${msg}${_R}`);
-    originalConsoleMethods.log(`${_G}╚═╝${_R}`);
+    UltraCleanLogger._block("MSG", _GREEND, _GREEND, args.join(" "));
   }
   static critical(...args) {
-    const time = _getTime();
-    const text = args.join(" ");
-    originalConsoleMethods.error(`${_YB}╔═|〔  🚨 CRITICAL 〕 ${_YD}${time}${_R}`);
-    originalConsoleMethods.error(`${_Y}║ ▸ ${text}${_R}`);
-    originalConsoleMethods.error(`${_Y}╚═╝${_R}`);
+    UltraCleanLogger._block("CRITICAL", _REDB, _RED, args.join(" "));
   }
-  static group(...args) {
-    const timestamp = `${_MAGB}[${_getTime()}]${_R}`;
-    originalConsoleMethods.log(timestamp, `${_MAG}👥${_R}`, ...args.map(a => `${_MAG}${a}${_R}`));
-  }
-  static member(...args) {
-    const timestamp = `${_CYANB}[${_getTime()}]${_R}`;
-    originalConsoleMethods.log(timestamp, `${_CYAN}👤${_R}`, ...args.map(a => `${_CYAN}${a}${_R}`));
-  }
-  static antiviewonce(...args) {
-    const timestamp = `${_MAGB}[${_getTime()}]${_R}`;
-    originalConsoleMethods.log(timestamp, `${_MAG}🔐${_R}`, ...args.map(a => `${_MAG}${a}${_R}`));
-  }
+  static group(...args)         { UltraCleanLogger._inline("◈", _MAGB, _MAG, ...args); }
+  static member(...args)        { UltraCleanLogger._inline("◉", _CYANB, _CYAN, ...args); }
+  static antiviewonce(...args)  { UltraCleanLogger._inline("⊕", _MAGB, _MAG, ...args); }
   static message(phone, chatType, groupName, text, time) {
     const t = time || _getTime();
     const isGroup = chatType === "GROUP";
-    const typeIcon = isGroup ? "👥" : "💬";
-    const typeLabel = isGroup ? "GROUP" : "  DM ";
-    const preview = text.length > 90 ? text.substring(0, 90) + "…" : text;
-    const color = isGroup ? _BL : _ORG;
-    const colorB = isGroup ? _BLB : _ORGB;
-    originalConsoleMethods.log(`${colorB}╔═|〔  ${typeIcon} ${typeLabel} 〕 ${color}${t}${_R}`);
-    if (isGroup && groupName) {
-      originalConsoleMethods.log(`${color}║ ▸ 📱 +${phone}   👥 ${groupName}${_R}`);
-    } else {
-      originalConsoleMethods.log(`${color}║ ▸ 📱 +${phone}${_R}`);
-    }
-    originalConsoleMethods.log(`${color}║ ▸ "${preview}"${_R}`);
-    originalConsoleMethods.log(`${color}╚═╝${_R}`);
+    const label = isGroup ? "GROUP" : "DM";
+    const cB = isGroup ? _CYANB   : _ORANGEB;
+    const c  = isGroup ? _CYAN    : _ORANGE;
+    const preview = text.length > 80 ? text.substring(0, 77) + "…" : text;
+    const who = isGroup && groupName ? `+${phone}  ·  ${groupName}` : `+${phone}`;
+    originalConsoleMethods.log(_boxHdr(label, t, cB));
+    originalConsoleMethods.log(_boxRow(who, c));
+    originalConsoleMethods.log(_boxRow(`"${preview}"`, c));
+    originalConsoleMethods.log(_boxFtr(c));
   }
-  static flushSystem() {
-    _flushSystemBuffer();
-  }
+  static flushSystem() { _flushSystemBuffer(); }
 }
 
 // Replace console methods
@@ -1376,8 +1327,7 @@ const ultraSilentLogger = {
   warning: () => {},
   event: () => {},
   command: (...args) => {
-    const timestamp = chalk.gray(`[${new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" })}]`);
-    originalConsoleMethods.log(timestamp, chalk.cyan("⚡"), ...args);
+    UltraCleanLogger.command(...args);
   }
 };
 
