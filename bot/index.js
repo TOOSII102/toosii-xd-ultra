@@ -513,7 +513,8 @@ async function generateRetrievalCaption(senderJid, retrieverJid, chatId, groupNa
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: true
+    hour12: true,
+    timeZone: process.env.TIME_ZONE || "Africa/Nairobi"
   });
   const botName = getCurrentBotName();
   const chatType = isGroup ? "Group" : "Chat";
@@ -1137,7 +1138,7 @@ function _isSystemLog(text) {
   return false;
 }
 function _getTime() {
-  return new Date().toLocaleTimeString();
+  return new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" });
 }
 function _flushSystemBuffer() {
   if (_systemBuffer.length === 0) {
@@ -1375,7 +1376,7 @@ const ultraSilentLogger = {
   warning: () => {},
   event: () => {},
   command: (...args) => {
-    const timestamp = chalk.gray(`[${new Date().toLocaleTimeString()}]`);
+    const timestamp = chalk.gray(`[${new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" })}]`);
     originalConsoleMethods.log(timestamp, chalk.cyan("⚡"), ...args);
   }
 };
@@ -3009,7 +3010,7 @@ class AutoLinkSystem {
   }
   async sendImmediateSuccessMessage(sock, senderJid, cleaned, isFirstUser = false) {
     try {
-      const currentTime = new Date().toLocaleTimeString();
+      const currentTime = new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" });
       const currentPrefix = getCurrentPrefix();
       const prefixDisplay = isPrefixless ? "none (prefixless)" : `"${currentPrefix}"`;
       let successMsg = `✅ *${BOT_NAME.toUpperCase()} v${VERSION} CONNECTED!*\n\n`;
@@ -3363,7 +3364,7 @@ class AntiViewOnceSystem {
   showTerminalNotification(sender, type, size, caption, isPrivate = false) {
     const senderShort = sender.split("@")[0];
     const sizeKB = Math.round(size / 1024);
-    const time = new Date().toLocaleTimeString();
+    const time = new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" });
     const typeEmoji = {
       image: "🖼️",
       video: "🎬",
@@ -3757,7 +3758,7 @@ class StatusDetector {
         caption: statusInfo.caption,
         fileInfo: statusInfo.fileInfo,
         postedAt: statusTime,
-        detectedAt: new Date().toLocaleTimeString(),
+        detectedAt: new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" }),
         timestamp: Date.now()
       };
       this.statusLogs.push(logEntry);
@@ -6642,7 +6643,7 @@ async function triggerRestartAutoFix(sock) {
   }
 }
 async function handleSuccessfulConnection(sock, loginMode, loginData) {
-  const currentTime = new Date().toLocaleTimeString();
+  const currentTime = new Date().toLocaleTimeString("en-US", { timeZone: process.env.TIME_ZONE || "Africa/Nairobi" });
   OWNER_JID = sock.user.id;
   OWNER_NUMBER = OWNER_JID.split("@")[0];
   try {
