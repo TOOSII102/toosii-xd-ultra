@@ -7430,6 +7430,8 @@ async function handleIncomingMessage(sock, msg) {
   const startTime = Date.now();
   try {
     // ─── Resolve LID chatId → canonical @s.whatsapp.net ─────────────
+    // IMPORTANT: also write back to msg.key.remoteJid so every command
+    // that reads msg.key.remoteJid directly gets the resolved JID.
     let chatId = msg.key.remoteJid;
     if (chatId && chatId.endsWith("@lid")) {
       try {
@@ -7437,7 +7439,6 @@ async function handleIncomingMessage(sock, msg) {
         if (_lidPhone) {
           chatId = `${_lidPhone}@s.whatsapp.net`;
         } else {
-          // fromMe LID DM = likely owner messaging their own saved messages
           const _ownerNum = (typeof OWNER_CLEAN_NUMBER !== "undefined" && OWNER_CLEAN_NUMBER)
             || (process.env.OWNER_NUMBER || "").replace(/[^0-9]/g, "");
           if (msg.key.fromMe && _ownerNum) {
@@ -7445,6 +7446,10 @@ async function handleIncomingMessage(sock, msg) {
           }
         }
       } catch {}
+      // Patch the message object so all downstream command code sees the resolved JID
+      if (!chatId.endsWith("@lid")) {
+        msg.key.remoteJid = chatId;
+      }
     }
     const senderJid = msg.key.participant || chatId;
     const isGroup = chatId.includes("@g.us");
