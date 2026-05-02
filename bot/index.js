@@ -4785,11 +4785,25 @@ async function startBot(loginMode = "auto", loginData = null) {
     const _noWrapCommands = new Set(["menu", "menu2", "buttonmenu", "aimenu", "animemenu", "automenu", "downloadmenu", "ephotomenu", "funmenu", "gamemenu", "gitmenu", "groupmenu", "imagemenu", "logomenu", "mediamenu", "musicmenu", "ownermenu", "photofunia", "securitymenu", "stalkermenu", "sportsmenu", "toolsmenu", "valentinemenu", "videomenu", "menustyle"]);
     sock.sendMessage = async (jid, content, options, ...rest) => {
       // ─── Status broadcast bypass ─────────────────────────────────────
-      // status@broadcast must go straight to Baileys — font transforms
-      // change the message text and button-mode wrapping silently converts
-      // it to an interactive message that never appears: a WA status.
       if (jid === "status@broadcast") {
         return originalSendMessage(jid, content, options, ...rest);
+      }
+      // ─── LID JID resolution ──────────────────────────────────────────
+      // Baileys crashes when sending to @lid JIDs — resolve to @s.whatsapp.net
+      if (jid && jid.endsWith("@lid")) {
+        try {
+          const _lidResolved = resolvePhoneFromLid(jid);
+          if (_lidResolved) {
+            jid = `${_lidResolved}@s.whatsapp.net`;
+          } else {
+            // Fallback: owner LID → use owner's clean JID (covers self-DMs)
+            const _ownerFallback = (typeof OWNER_CLEAN_NUMBER !== "undefined" && OWNER_CLEAN_NUMBER)
+              || (process.env.OWNER_NUMBER || "").replace(/[^0-9]/g, "");
+            if (_ownerFallback) {
+              jid = `${_ownerFallback}@s.whatsapp.net`;
+            }
+          }
+        } catch {}
       }
       // ─── Font transformation ────────────────────────────────────────
       const _activeFont = globalThis._fontConfig && globalThis._fontConfig.font || "default";
@@ -7464,7 +7478,23 @@ function extractTextFromMessage(messageObj) {
 async function handleIncomingMessage(sock, msg) {
   const startTime = Date.now();
   try {
-    const chatId = msg.key.remoteJid;
+    // ─── Resolve LID chatId → canonical @s.whatsapp.net ─────────────
+    let chatId = msg.key.remoteJid;
+    if (chatId && chatId.endsWith("@lid")) {
+      try {
+        const _lidPhone = resolvePhoneFromLid(chatId);
+        if (_lidPhone) {
+          chatId = `${_lidPhone}@s.whatsapp.net`;
+        } else {
+          // fromMe LID DM = likely owner messaging their own saved messages
+          const _ownerNum = (typeof OWNER_CLEAN_NUMBER !== "undefined" && OWNER_CLEAN_NUMBER)
+            || (process.env.OWNER_NUMBER || "").replace(/[^0-9]/g, "");
+          if (msg.key.fromMe && _ownerNum) {
+            chatId = `${_ownerNum}@s.whatsapp.net`;
+          }
+        }
+      } catch {}
+    }
     const senderJid = msg.key.participant || chatId;
     const isGroup = chatId.includes("@g.us");
 
