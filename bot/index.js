@@ -7721,7 +7721,7 @@ async function handleIncomingMessage(sock, msg) {
             }
             if (cmd.ownerOnly && !isOwnerW && !isSudoW) {
               await sock.sendMessage(chatId, {
-                text: "❌ *Owner Only Command*"
+                text: `❌ *Owner Only Command*\n\nThe \`${cmdName}\` command can only be used by the bot owner or sudo users.`
               }, {
                 quoted: msg
               });
@@ -7896,12 +7896,25 @@ async function handleIncomingMessage(sock, msg) {
           }
           if (!_qBypass) {
             if (_qMode === "silent") {
+              // Silent mode: bot ignores all non-owner/sudo commands — no response
               return;
             }
             if (_qMode === "groups" && !isGroup) {
+              // Bot is groups-only — tell DM senders why they get no response
+              try {
+                await sock.sendMessage(chatId, {
+                  text: `⚠️ *Bot is currently in Groups-Only mode.*\nCommands can only be used inside groups.`
+                }, { quoted: msg });
+              } catch {}
               return;
             }
             if (_qMode === "dms" && isGroup) {
+              // Bot is DMs-only — tell group members why they get no response
+              try {
+                await sock.sendMessage(chatId, {
+                  text: `⚠️ *Bot is currently in DMs-Only mode.*\nPlease send commands in a private chat with the bot.`
+                }, { quoted: msg });
+              } catch {}
               return;
             }
           }
@@ -7967,6 +7980,22 @@ async function handleIncomingMessage(sock, msg) {
     }
     if (!checkBotMode(msg, commandName, isSudoUser)) {
       if (!isOwnerUser && !isSudoUser) {
+        // Tell users why they can't use commands instead of silently ignoring
+        const _currentMode = (_cache_bot_mode?.mode || BOT_MODE || "public").toLowerCase();
+        if (_currentMode === "groups" && !isGroup) {
+          try {
+            await sock.sendMessage(chatId, {
+              text: `⚠️ *Bot is in Groups-Only mode.*\nSend commands inside a group.`
+            }, { quoted: msg });
+          } catch {}
+        } else if (_currentMode === "dms" && isGroup) {
+          try {
+            await sock.sendMessage(chatId, {
+              text: `⚠️ *Bot is in DMs-Only mode.*\nSend commands in a private chat with the bot.`
+            }, { quoted: msg });
+          } catch {}
+        }
+        // For "silent" mode, stay completely silent
         return;
       }
     }
@@ -7992,8 +8021,8 @@ async function handleIncomingMessage(sock, msg) {
           if (!sudoAllowed || !isSudoUser) {
             try {
               await sock.sendMessage(chatId, {
-                text: "❌ *Owner Only Command*"
-              });
+                text: `❌ *Owner Only Command*\n\nThe \`${commandName}\` command can only be used by the bot owner or sudo users.`
+              }, { quoted: msg });
             } catch {}
             return;
           }
@@ -8455,6 +8484,17 @@ async function handleDefaultCommands(commandName, sock, msg, args, currentPrefix
           setTimeout(() => {
             process.exit(1);
           }, 5000);
+          break;
+        }
+      default:
+        {
+          // Unknown command — tell the user rather than silently doing nothing
+          const _prefixStr = isPrefixless ? "" : currentPrefix;
+          try {
+            await sock.sendMessage(chatId, {
+              text: `❓ *Unknown command:* \`${_prefixStr}${commandName}\`\n\nUse *${_prefixStr}menu* to see all available commands.`
+            }, { quoted: msg });
+          } catch {}
           break;
         }
     }
