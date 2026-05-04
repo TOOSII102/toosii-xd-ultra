@@ -11,20 +11,29 @@ const BRANCH = 'heroku';
 const IS_HEROKU = !!process.env.DYNO;
 const PLATFORM  = IS_HEROKU ? 'Heroku' : 'VPS/Panel';
 
-const SESSION_FILE = path.join(__dirname, '../../session/creds.json');
-const GITHUB_URL   = `https://github.com/${REPO}.git`;
-const BOT_ROOT     = path.resolve(__dirname, '../../');
+const GITHUB_URL = `https://github.com/${REPO}.git`;
+
+// __dirname = bot/toosi-cmds/owner
+// BOT_ROOT  = bot/
+// REPO_ROOT = the folder containing bot/ (i.e. the project root)
+const BOT_ROOT  = path.resolve(__dirname, '../../');
+const REPO_ROOT = path.resolve(BOT_ROOT, '..');
+
+// Session lives at bot/session/
+const SESSION_DIR    = path.join(BOT_ROOT, 'session');
+// Backup goes to project root level so it's never touched by zip extraction
+const SESSION_BACKUP = path.join(REPO_ROOT, '_session_update_backup');
 
 function run(cmd, opts = {}) {
     return execSync(cmd, { encoding: 'utf8', timeout: 120000, stdio: 'pipe', ...opts }).trim();
 }
 
 function isGitRepo() {
-    try { run('git rev-parse --git-dir', { cwd: BOT_ROOT }); return true; } catch { return false; }
+    try { run('git rev-parse --git-dir', { cwd: REPO_ROOT }); return true; } catch { return false; }
 }
 
 function getCurrentCommit() {
-    try { return run('git rev-parse HEAD', { cwd: BOT_ROOT }); } catch { return null; }
+    try { return run('git rev-parse HEAD', { cwd: REPO_ROOT }); } catch { return null; }
 }
 
 async function getLatestCommit() {
@@ -41,6 +50,38 @@ async function getLatestCommit() {
             });
         }).on('error', reject);
     });
+}
+
+// Recursively copy a directory
+function copyDirSync(src, dest) {
+    if (!fs.existsSync(src)) return;
+    fs.mkdirSync(dest, { recursive: true });
+    for (const entry of fs.readdirSync(src)) {
+        const s = path.join(src, entry);
+        const d = path.join(dest, entry);
+        fs.statSync(s).isDirectory() ? copyDirSync(s, d) : fs.copyFileSync(s, d);
+    }
+}
+
+// Backup entire session folder to a safe location
+function backupSession() {
+    try {
+        if (!fs.existsSync(SESSION_DIR)) return false;
+        if (fs.existsSync(SESSION_BACKUP)) fs.rmSync(SESSION_BACKUP, { recursive: true, force: true });
+        copyDirSync(SESSION_DIR, SESSION_BACKUP);
+        return true;
+    } catch { return false; }
+}
+
+// Restore session folder from backup
+function restoreSession() {
+    try {
+        if (!fs.existsSync(SESSION_BACKUP)) return false;
+        if (fs.existsSync(SESSION_DIR)) fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+        copyDirSync(SESSION_BACKUP, SESSION_DIR);
+        fs.rmSync(SESSION_BACKUP, { recursive: true, force: true });
+        return true;
+    } catch { return false; }
 }
 
 // Download zip with redirect support — returns a Buffer
@@ -64,11 +105,11 @@ async function downloadZip(url) {
 }
 
 // Pure Node.js ZIP extractor — no unzip binary required
-// Uses zlib (built-in) for deflate decompression
-function extractZipBuffer(buf, destDir, skipDirs) {
+// Extracts to REPO_ROOT so "bot/index.js" lands at REPO_ROOT/bot/index.js correctly
+function extractZipBuffer(buf, destDir, skipPaths) {
     const zlib = require('zlib');
 
-    // Find End of Central Directory record (signature 0x06054b50)
+    // Find End of Central Directory (signature 0x06054b50)
     let eocdOffset = -1;
     for (let i = buf.length - 22; i >= 0; i--) {
         if (buf.readUInt32LE(i) === 0x06054b50) { eocdOffset = i; break; }
@@ -82,7 +123,7 @@ function extractZipBuffer(buf, destDir, skipDirs) {
     let stripPrefix = null;
 
     for (let i = 0; i < cdCount; i++) {
-        if (buf.readUInt32LE(pos) !== 0x02014b50) break; // Central dir signature
+        if (buf.readUInt32LE(pos) !== 0x02014b50) break;
 
         const compMethod  = buf.readUInt16LE(pos + 10);
         const compSize    = buf.readUInt32LE(pos + 20);
@@ -95,48 +136,51 @@ function extractZipBuffer(buf, destDir, skipDirs) {
 
         pos += 46 + nameLen + extraLen + commentLen;
 
-        // Auto-detect and strip top-level folder (e.g. "toosii-xd-ultra-heroku/")
+        // Auto-detect top-level folder prefix (e.g. "toosii-xd-ultra-main/")
         if (stripPrefix === null) {
             const firstSlash = fileName.indexOf('/');
-            if (firstSlash > 0) stripPrefix = fileName.slice(0, firstSlash + 1);
-            else stripPrefix = '';
+            stripPrefix = firstSlash > 0 ? fileName.slice(0, firstSlash + 1) : '';
         }
 
+        // Strip the top-level folder so paths are relative to project root
         const relPath = stripPrefix && fileName.startsWith(stripPrefix)
             ? fileName.slice(stripPrefix.length)
             : fileName;
 
         if (!relPath || relPath.endsWith('/')) continue; // directory entry
 
-        // Skip protected paths
-        const topDir = relPath.split('/')[0];
-        if (skipDirs.has(topDir)) continue;
+        // Skip protected paths — check both top dir and full path prefix
+        const topDir  = relPath.split('/')[0];
+        const fullDest = path.join(destDir, relPath);
 
-        // Read local file header for actual data start
+        // Never touch session/ or data/ regardless of where they appear
+        if (skipPaths.has(topDir)) continue;
+        if (relPath.startsWith('bot/session/') || relPath.startsWith('bot/data/')) continue;
+
+        // Read local file header for actual data offset
         const localNameLen  = buf.readUInt16LE(localOffset + 26);
         const localExtraLen = buf.readUInt16LE(localOffset + 28);
         const dataStart     = localOffset + 30 + localNameLen + localExtraLen;
 
-        const destPath = path.join(destDir, relPath);
-        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+        fs.mkdirSync(path.dirname(fullDest), { recursive: true });
 
         if (compMethod === 0) {
-            // Stored — no compression
-            fs.writeFileSync(destPath, buf.slice(dataStart, dataStart + uncompSize));
+            fs.writeFileSync(fullDest, buf.slice(dataStart, dataStart + uncompSize));
         } else if (compMethod === 8) {
-            // Deflated — decompress with zlib inflateRaw
-            const compressed = buf.slice(dataStart, dataStart + compSize);
-            fs.writeFileSync(destPath, zlib.inflateRawSync(compressed));
+            fs.writeFileSync(fullDest, zlib.inflateRawSync(buf.slice(dataStart, dataStart + compSize)));
         }
-        // Other methods are extremely rare in GitHub zips; skip safely
     }
 }
 
 async function updateViaZip() {
     const zipUrl = `https://codeload.github.com/${REPO}/zip/refs/heads/${BRANCH}`;
-    const SKIP   = new Set(['session', 'data', 'node_modules', '.env', '_update_tmp.zip', '_update_extracted']);
-    const buf    = await downloadZip(zipUrl);
-    extractZipBuffer(buf, BOT_ROOT, SKIP);
+
+    // These top-level dirs in the zip are skipped entirely
+    const SKIP = new Set(['.env', 'node_modules']);
+
+    const buf = await downloadZip(zipUrl);
+    // Extract to REPO_ROOT (parent of bot/) so zip paths like "bot/index.js" land correctly
+    extractZipBuffer(buf, REPO_ROOT, SKIP);
 }
 
 module.exports = {
@@ -200,20 +244,16 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        // Backup session creds
-        let savedCreds = null;
-        try {
-            if (fs.existsSync(SESSION_FILE)) savedCreds = fs.readFileSync(SESSION_FILE);
-        } catch {}
+        // ── Backup entire session folder BEFORE update ────────────────────────
+        const sessionSaved = backupSession();
 
-        // Try git first; fall back to pure-Node zip (no unzip binary needed)
         let pullErr, npmErr, method;
 
         if (isGitRepo()) {
             method = 'git';
             try {
-                run(`git fetch ${GITHUB_URL} ${BRANCH}`, { cwd: BOT_ROOT });
-                run(`git reset --hard FETCH_HEAD`, { cwd: BOT_ROOT });
+                run(`git fetch ${GITHUB_URL} ${BRANCH}`, { cwd: REPO_ROOT });
+                run(`git reset --hard FETCH_HEAD`, { cwd: REPO_ROOT });
             } catch (err) { pullErr = err.message?.slice(0, 150); }
         } else {
             method = 'zip';
@@ -222,13 +262,8 @@ module.exports = {
             } catch (err) { pullErr = err.message?.slice(0, 150); }
         }
 
-        // Always restore creds.json
-        if (savedCreds) {
-            try {
-                fs.mkdirSync(path.dirname(SESSION_FILE), { recursive: true });
-                fs.writeFileSync(SESSION_FILE, savedCreds);
-            } catch {}
-        }
+        // ── Always restore session regardless of update result ────────────────
+        restoreSession();
 
         if (pullErr) {
             return await sock.sendMessage(chatId, {
@@ -249,6 +284,7 @@ module.exports = {
                 `║ ▸ *From*     : ${shortCurrent}`,
                 `║ ▸ *To*       : ${shortLatest}`,
                 `║ ▸ *Changes*  : ${latest.message}`,
+                `║ ▸ *Session*  : ${sessionSaved ? '✅ Preserved' : '⚠️ Could not backup'}`,
                 `║ ▸ *Deps*     : ${npmErr ? '⚠️ npm had warnings' : '✅ Up to date'}`,
                 `║`,
                 `║ ▸ 🔄 Restarting...`,
