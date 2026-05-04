@@ -13,7 +13,7 @@ const PLATFORM  = IS_HEROKU ? 'Heroku' : 'VPS/Panel';
 
 const SESSION_FILE = path.join(__dirname, '../../session/creds.json');
 const GITHUB_URL   = `https://github.com/${REPO}.git`;
-const BOT_ROOT     = path.join(__dirname, '../../');
+const BOT_ROOT     = path.resolve(__dirname, '../../');
 
 function run(cmd, opts = {}) {
     return execSync(cmd, { encoding: 'utf8', timeout: 120000, stdio: 'pipe', ...opts }).trim();
@@ -43,60 +43,106 @@ async function getLatestCommit() {
     });
 }
 
-// Download GitHub zip and extract — works even without a git repo
-async function updateViaZip() {
-    const zipUrl  = `https://codeload.github.com/${REPO}/zip/refs/heads/${BRANCH}`;
-    const tmpZip  = path.join(BOT_ROOT, '_update_tmp.zip');
-    const tmpDir  = path.join(BOT_ROOT, '_update_extracted');
-
-    // Download zip
-    await new Promise((resolve, reject) => {
-        const file = fs.createWriteStream(tmpZip);
-        https.get(zipUrl, { headers: { 'User-Agent': 'TOOSII-XD-Bot' } }, res => {
-            if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
-            res.pipe(file);
-            file.on('finish', () => { file.close(); resolve(); });
-        }).on('error', reject);
+// Download zip with redirect support — returns a Buffer
+async function downloadZip(url) {
+    return new Promise((resolve, reject) => {
+        const request = (reqUrl, redirects = 0) => {
+            if (redirects > 5) return reject(new Error('Too many redirects'));
+            https.get(reqUrl, { headers: { 'User-Agent': 'TOOSII-XD-Bot' } }, res => {
+                if ([301, 302, 307, 308].includes(res.statusCode)) {
+                    return request(res.headers.location, redirects + 1);
+                }
+                if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
+                const chunks = [];
+                res.on('data', chunk => chunks.push(chunk));
+                res.on('end', () => resolve(Buffer.concat(chunks)));
+                res.on('error', reject);
+            }).on('error', reject);
+        };
+        request(url);
     });
+}
 
-    // Extract zip
-    run(`unzip -o ${tmpZip} -d ${tmpDir}`);
+// Pure Node.js ZIP extractor — no unzip binary required
+// Uses zlib (built-in) for deflate decompression
+function extractZipBuffer(buf, destDir, skipDirs) {
+    const zlib = require('zlib');
 
-    // Find extracted folder (e.g. toosii-xd-ultra-heroku/)
-    const extracted = fs.readdirSync(tmpDir).find(f =>
-        fs.statSync(path.join(tmpDir, f)).isDirectory()
-    );
-    if (!extracted) throw new Error('Could not find extracted folder');
-
-    const srcDir = path.join(tmpDir, extracted);
-
-    // Copy files over (skip session/, data/, node_modules/, .env)
-    const SKIP = new Set(['session', 'data', 'node_modules', '.env', '_update_tmp.zip', '_update_extracted']);
-
-    function copyDir(src, dest) {
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-        for (const entry of fs.readdirSync(src)) {
-            if (SKIP.has(entry)) continue;
-            const s = path.join(src, entry);
-            const d = path.join(dest, entry);
-            if (fs.statSync(s).isDirectory()) {
-                copyDir(s, d);
-            } else {
-                fs.copyFileSync(s, d);
-            }
-        }
+    // Find End of Central Directory record (signature 0x06054b50)
+    let eocdOffset = -1;
+    for (let i = buf.length - 22; i >= 0; i--) {
+        if (buf.readUInt32LE(i) === 0x06054b50) { eocdOffset = i; break; }
     }
-    copyDir(srcDir, BOT_ROOT);
+    if (eocdOffset === -1) throw new Error('Invalid ZIP: EOCD not found');
 
-    // Cleanup
-    try { fs.unlinkSync(tmpZip); } catch {}
-    try { run(`rm -rf ${tmpDir}`); } catch {}
+    const cdCount  = buf.readUInt16LE(eocdOffset + 10);
+    const cdOffset = buf.readUInt32LE(eocdOffset + 16);
+
+    let pos = cdOffset;
+    let stripPrefix = null;
+
+    for (let i = 0; i < cdCount; i++) {
+        if (buf.readUInt32LE(pos) !== 0x02014b50) break; // Central dir signature
+
+        const compMethod  = buf.readUInt16LE(pos + 10);
+        const compSize    = buf.readUInt32LE(pos + 20);
+        const uncompSize  = buf.readUInt32LE(pos + 24);
+        const nameLen     = buf.readUInt16LE(pos + 28);
+        const extraLen    = buf.readUInt16LE(pos + 30);
+        const commentLen  = buf.readUInt16LE(pos + 32);
+        const localOffset = buf.readUInt32LE(pos + 42);
+        const fileName    = buf.slice(pos + 46, pos + 46 + nameLen).toString('utf8');
+
+        pos += 46 + nameLen + extraLen + commentLen;
+
+        // Auto-detect and strip top-level folder (e.g. "toosii-xd-ultra-heroku/")
+        if (stripPrefix === null) {
+            const firstSlash = fileName.indexOf('/');
+            if (firstSlash > 0) stripPrefix = fileName.slice(0, firstSlash + 1);
+            else stripPrefix = '';
+        }
+
+        const relPath = stripPrefix && fileName.startsWith(stripPrefix)
+            ? fileName.slice(stripPrefix.length)
+            : fileName;
+
+        if (!relPath || relPath.endsWith('/')) continue; // directory entry
+
+        // Skip protected paths
+        const topDir = relPath.split('/')[0];
+        if (skipDirs.has(topDir)) continue;
+
+        // Read local file header for actual data start
+        const localNameLen  = buf.readUInt16LE(localOffset + 26);
+        const localExtraLen = buf.readUInt16LE(localOffset + 28);
+        const dataStart     = localOffset + 30 + localNameLen + localExtraLen;
+
+        const destPath = path.join(destDir, relPath);
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+        if (compMethod === 0) {
+            // Stored — no compression
+            fs.writeFileSync(destPath, buf.slice(dataStart, dataStart + uncompSize));
+        } else if (compMethod === 8) {
+            // Deflated — decompress with zlib inflateRaw
+            const compressed = buf.slice(dataStart, dataStart + compSize);
+            fs.writeFileSync(destPath, zlib.inflateRawSync(compressed));
+        }
+        // Other methods are extremely rare in GitHub zips; skip safely
+    }
+}
+
+async function updateViaZip() {
+    const zipUrl = `https://codeload.github.com/${REPO}/zip/refs/heads/${BRANCH}`;
+    const SKIP   = new Set(['session', 'data', 'node_modules', '.env', '_update_tmp.zip', '_update_extracted']);
+    const buf    = await downloadZip(zipUrl);
+    extractZipBuffer(buf, BOT_ROOT, SKIP);
 }
 
 module.exports = {
     name:        'update',
     aliases:     ['upgrade', 'pullupdate'],
-    description: 'Pull latest changes from GitHub and keep bot running',
+    description: 'Pull latest changes from GitHub and restart',
     category:    'owner',
     ownerOnly:   true,
 
@@ -112,7 +158,6 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        // Heroku: ephemeral filesystem — git pull can't persist
         if (IS_HEROKU) {
             let latest;
             try { latest = await getLatestCommit(); } catch { latest = { sha: '?', message: '?' }; }
@@ -121,19 +166,14 @@ module.exports = {
                     `╔═|〔  UPDATE 〕`,
                     `║`,
                     `║ ▸ *Platform* : ☁️ Heroku`,
-                    `║ ▸ *Status*   : ℹ️ Git pull not supported here`,
-                    `║`,
-                    `║  Push to GitHub then redeploy from`,
-                    `║  the Heroku dashboard (heroku branch).`,
-                    `║`,
-                    `║ ▸ *Latest* : ${latest.sha?.slice(0, 7)} — ${latest.message}`,
+                    `║ ▸ *Status*   : ℹ️ Redeploy from Heroku dashboard`,
+                    `║ ▸ *Latest*   : ${latest.sha?.slice(0, 7)} — ${latest.message}`,
                     `║`,
                     `${foot}`,
                 ].join('\n')
             }, { quoted: msg });
         }
 
-        // Fetch latest commit info from GitHub
         let latest;
         try { latest = await getLatestCommit(); }
         catch (err) {
@@ -144,7 +184,7 @@ module.exports = {
 
         const current      = getCurrentCommit();
         const shortCurrent = current?.slice(0, 7) || 'unknown';
-        const shortLatest  = latest.sha?.slice(0, 7)  || 'unknown';
+        const shortLatest  = latest.sha?.slice(0, 7) || 'unknown';
 
         if (current && latest.sha && current === latest.sha) {
             return await sock.sendMessage(chatId, {
@@ -152,7 +192,6 @@ module.exports = {
                     `╔═|〔  UPDATE 〕`,
                     `║`,
                     `║ ▸ *Status*   : ✅ Already up to date`,
-                    `║ ▸ *Platform* : ${PLATFORM}`,
                     `║ ▸ *Commit*   : ${shortCurrent}`,
                     `║ ▸ *Changes*  : ${latest.message}`,
                     `║`,
@@ -161,19 +200,16 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        // ── Backup session creds before any update operation ───────────────────
+        // Backup session creds
         let savedCreds = null;
         try {
-            if (fs.existsSync(SESSION_FILE)) {
-                savedCreds = fs.readFileSync(SESSION_FILE);
-            }
+            if (fs.existsSync(SESSION_FILE)) savedCreds = fs.readFileSync(SESSION_FILE);
         } catch {}
 
-        // ── Try git pull first; fall back to zip download if not a git repo ───
+        // Try git first; fall back to pure-Node zip (no unzip binary needed)
         let pullErr, npmErr, method;
-        const hasGit = isGitRepo();
 
-        if (hasGit) {
+        if (isGitRepo()) {
             method = 'git';
             try {
                 run(`git fetch ${GITHUB_URL} ${BRANCH}`, { cwd: BOT_ROOT });
@@ -186,7 +222,7 @@ module.exports = {
             } catch (err) { pullErr = err.message?.slice(0, 150); }
         }
 
-        // ── Always restore creds.json regardless of update result ──────────────
+        // Always restore creds.json
         if (savedCreds) {
             try {
                 fs.mkdirSync(path.dirname(SESSION_FILE), { recursive: true });
@@ -200,11 +236,9 @@ module.exports = {
             }, { quoted: msg });
         }
 
-        // ── Install any new dependencies ───────────────────────────────────────
         try { run('npm install --production', { cwd: BOT_ROOT }); }
         catch { npmErr = true; }
 
-        // ── Notify then exit so the panel/pm2/workflow restarts the bot ────────
         await sock.sendMessage(chatId, {
             text: [
                 `╔═|〔  UPDATE 〕`,
