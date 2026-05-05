@@ -5002,6 +5002,11 @@ async function startBot(loginMode = "auto", loginData = null) {
           clearTimeout(autoRestartTimer);
         }
         autoRestartTimer = setTimeout(() => {
+          // Skip restart if a device conflict is actively being resolved
+          if (conflictCount > 0) {
+            UltraCleanLogger.info("⏸️ Skipping 90-min restart — conflict recovery in progress.");
+            return;
+          }
           UltraCleanLogger.info("🔄 Scheduled memory-cleanup restart (90 min uptime)");
           setTimeout(() => process.exit(0), 1500);
         }, 5400000);
