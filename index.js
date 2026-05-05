@@ -119,8 +119,29 @@ function startBot() {
   });
 }
 
+// ── Auto-install bot dependencies if node_modules is missing ─────────────────
+function ensureDeps() {
+  return new Promise((resolve) => {
+    const nmDir = path.join(BOT_DIR, 'node_modules');
+    const pkg   = path.join(BOT_DIR, 'package.json');
+    // Check if key dependency exists — if not, run npm install
+    const testMod = path.join(nmDir, 'dotenv');
+    if (fs.existsSync(testMod)) return resolve();
+    if (!fs.existsSync(pkg)) return resolve();
+    console.log('[launcher] node_modules missing or incomplete — running npm install in bot/...');
+    const { execSync } = require('child_process');
+    try {
+      execSync('npm install --omit=dev', { cwd: BOT_DIR, stdio: 'inherit', timeout: 180000 });
+      console.log('[launcher] npm install complete.');
+    } catch (e) {
+      console.error('[launcher] npm install failed:', e.message);
+    }
+    resolve();
+  });
+}
+
 // ── Entry point ──────────────────────────────────────────────────────────────
 acquireLock();
-ensureYtDlp()
-  .catch((err) => console.error('[launcher] yt-dlp download failed:', err.message))
+ensureDeps()
+  .then(() => ensureYtDlp().catch((err) => console.error('[launcher] yt-dlp download failed:', err.message)))
   .finally(startBot);
